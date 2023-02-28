@@ -8,6 +8,8 @@ package dk.mhr.radio8podcast.presentation
 
 import android.os.Bundle
 import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -21,13 +23,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.view.GestureDetectorCompat
+import androidx.core.view.MotionEventCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+
 import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.*
+import androidx.wear.compose.navigation.SwipeDismissableNavHost
+import androidx.wear.compose.navigation.composable
+import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import dk.mhr.radio8podcast.service.PodcastService
@@ -35,23 +41,24 @@ import kotlinx.coroutines.Dispatchers
 
 var podcastService = PodcastService(Dispatchers.IO)
 var podcastViewModel = PodcastViewModel(podcastService);
+val DEBUG_LOG = "MHR";
 
-class MainActivity : ComponentActivity(), LifecycleOwner {
+class MainActivity : ComponentActivity(), LifecycleOwner
+{
 
 //    init {
-        //val string = resources.getString(dk.mhr.radio8podcast.R.string.api_key);
+    //val string = resources.getString(dk.mhr.radio8podcast.R.string.api_key);
     //    Log.i("MHR", "Key: " + string)
-  //  }
-
-
+    //  }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
 
-            Log.i("MHR", "Oncreate called")
+            Log.i(DEBUG_LOG, "Oncreate called")
             PodCastNavHost("WearApp", this)
         }
+
     }
 }
 
@@ -123,7 +130,6 @@ fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit) {
 }
 
 
-
 @Composable
 fun PodCastNavHost(
     startDestination: String = "WearApp",
@@ -131,11 +137,11 @@ fun PodCastNavHost(
     modifier: Modifier = Modifier
 ) {
 
-    val navController = rememberNavController()
+    val navController = rememberSwipeDismissableNavController()
     val API_KEY = stringResource(R.string.api_key)
 
-    NavHost(
-        modifier = modifier,
+    SwipeDismissableNavHost(
+        //modifier = modifier,
         navController = navController,
         startDestination = startDestination
     ) {
@@ -146,12 +152,17 @@ fun PodCastNavHost(
                 podcastViewModel.podcasts.observe(lifecycleOwner) { t ->
                     podcastViewModel.podcastList = t
                     Log.i("MHR", "Observe called...")
-                    navController.navigate("ShowPodcasts")
+                    navController.navigate("ShowPodcasts"){popUpTo("WearApp")}
                 }
             })
         }
         composable("ShowPodcasts") {
-            PodcastListComposable(podcastViewModel).ShowPodcastList(lifecycleOwner)
+            //Log.i(DEBUG_LOG, "backStackEntry: ${it.destination}")
+            PodcastListComposable(podcastViewModel).ShowPodcastList(onPodCastDownload = {
+                title, link, listenUrl ->
+                Log.i("MHR", "Podcast clicked!: $title, Link: $link, ListenUrl: $listenUrl" )
+
+            }, lifecycleOwner)
         }
     }
 
