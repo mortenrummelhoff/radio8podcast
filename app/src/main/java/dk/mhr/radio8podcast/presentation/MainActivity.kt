@@ -6,38 +6,34 @@
 
 package dk.mhr.radio8podcast.presentation
 
+//import androidx.compose.foundation.interaction.collectIsPressedAsState
+
 import android.os.Bundle
 import android.util.Log
-import android.view.GestureDetector
-import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-//import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.core.view.GestureDetectorCompat
-import androidx.core.view.MotionEventCompat
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
-import androidx.navigation.compose.NavHost
-
-import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.*
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import dk.mhr.radio8podcast.service.PodcastService
 import kotlinx.coroutines.Dispatchers
+
 
 var podcastService = PodcastService(Dispatchers.IO)
 var podcastViewModel = PodcastViewModel(podcastService);
@@ -51,12 +47,18 @@ class MainActivity : ComponentActivity(), LifecycleOwner
     //    Log.i("MHR", "Key: " + string)
     //  }
 
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
 
-            Log.i(DEBUG_LOG, "Oncreate called")
-            PodCastNavHost("WearApp", this)
+            val player = ExoPlayer.Builder(this).build()
+            //player.
+
+            Log.i(DEBUG_LOG, "Oncreate called we have player: $player")
+            PodCastNavHost("WearApp", this, player)
         }
 
     }
@@ -73,7 +75,7 @@ fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit) {
     //val isPressed by interactionSource.collectIsPressedAsState()
 
     val asState: State<Boolean> = interactionSource.collectIsPressedAsState()
-
+    val padding = 6.dp
     // var prut =
 
 //    podcasts.observe(this, Observer {
@@ -127,6 +129,18 @@ fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit) {
             Text("Click to fetch")
         }
     )
+    Spacer(Modifier.size(padding))
+    Chip(onClick = onNavigateToShowPodcasts,
+    colors = ChipDefaults.chipColors(contentColor = MaterialTheme.colors.background),
+    label = {
+        Text(text = "Downloads")
+    },
+    secondaryLabel = {
+        //Log.i("MHR", "secondaryLabel->" + podcastViewModel.podcasts.value)
+        Text("Click to see")
+    }
+    )
+
 }
 
 
@@ -134,11 +148,14 @@ fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit) {
 fun PodCastNavHost(
     startDestination: String = "WearApp",
     lifecycleOwner: LifecycleOwner,
+    player: ExoPlayer,
     modifier: Modifier = Modifier
 ) {
 
     val navController = rememberSwipeDismissableNavController()
     val API_KEY = stringResource(R.string.api_key)
+
+
 
     SwipeDismissableNavHost(
         //modifier = modifier,
@@ -149,7 +166,7 @@ fun PodCastNavHost(
             WearApp(onNavigateToFetchPodcast = {
                 Log.i("MHR", "Calling navigate to ShowPodcasts")
                 podcastViewModel.loadPodcast(API_KEY)
-                podcastViewModel.podcasts.observe(lifecycleOwner) { t ->
+                podcastViewModel.podcasts.observe(lifecycleOwner as LifecycleOwner) { t ->
                     podcastViewModel.podcastList = t
                     Log.i("MHR", "Observe called...")
                     navController.navigate("ShowPodcasts"){popUpTo("WearApp")}
@@ -159,8 +176,29 @@ fun PodCastNavHost(
         composable("ShowPodcasts") {
             //Log.i(DEBUG_LOG, "backStackEntry: ${it.destination}")
             PodcastListComposable(podcastViewModel).ShowPodcastList(onPodCastDownload = {
-                title, link, listenUrl ->
-                Log.i("MHR", "Podcast clicked!: $title, Link: $link, ListenUrl: $listenUrl" )
+                title, link, audio ->
+                Log.i("MHR", "Podcast clicked!: $title, Link: $link, audio: $audio" )
+
+                if (player.isPlaying) {
+                    //player.release()
+
+                }
+
+//                val audioManager: AudioManager =
+//                    context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+                // Build the media item.
+                // Build the media item.
+                val mediaItem: MediaItem = MediaItem.fromUri(audio)
+// Set the media item to be played.
+// Set the media item to be played.
+                player.setMediaItem(mediaItem)
+// Prepare the player.
+// Prepare the player.
+                player.prepare()
+// Start the playback.
+// Start the playback.
+                player.play()
 
             }, lifecycleOwner)
         }

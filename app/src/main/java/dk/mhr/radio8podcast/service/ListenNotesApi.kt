@@ -10,6 +10,20 @@ class ListenNotesApi(API_KEY: String) {
     var useMockData = true;
     var apiKey = API_KEY;
 
+    fun getDetailedInfo() {
+        try {
+            val objClient = ModClient(apiKey)
+            val parameters = HashMap<String, String>()
+            parameters.put("id", "b6a00d39051a4a53a9b6cd66bb40e069")
+//            parameters.put("next_episode_pub_date", "1479154463000")
+//            parameters.put("sort", "recent_first")
+            val response = objClient.fetchPodcastById(parameters)
+            println(response.toJSON().toString(2))
+        } catch (e: ListenApiException) {
+            println(e)
+        }
+    }
+
     fun search(): JSONObject? {
         if (useMockData) {
             return JSONObject(MockSearch().mockSearch);

@@ -27,6 +27,7 @@ class PodcastViewModel(private val podcastService : PodcastService)
             viewModelScope.launch {
 
                 pods = podcastService.fetchPodcasts(API_KEY)
+                //podcastService.fetchDetails(API_KEY, "1")
                 //Log.i("MHR", pods)
                 podcasts.postValue(pods);
             }

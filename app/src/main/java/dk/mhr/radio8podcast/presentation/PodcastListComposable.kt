@@ -29,7 +29,7 @@ class PodcastListComposable(podcastViewModel: PodcastViewModel) : ViewModel() {
 
     @Composable
     fun ShowPodcastList(
-        onPodCastDownload: (title: String, link: String, listenUrl: String) -> Unit,
+        onPodCastDownload: (title: String, link: String, audio: String) -> Unit,
         lifecycleOwner: LifecycleOwner
     ) {
 
@@ -60,7 +60,7 @@ class PodcastListComposable(podcastViewModel: PodcastViewModel) : ViewModel() {
                             onPodCastDownload(
                                 "${record.get("title_original")}",
                                 "${record.get("link")}",
-                                "${record.get("listennotes_url")}"
+                                "${record.get("audio")}"
                             )
                         },
                         title = {

@@ -12,4 +12,13 @@ class PodcastService(private val ioDispatcher: CoroutineDispatcher) {
             listenNotesService.search()?.toString(2) ?: ""
         }
     }
+
+    suspend fun fetchDetails(API_KEY: String, podcastId: String): String {
+        withContext(ioDispatcher) {
+            var listenNotesService = ListenNotesApi(API_KEY)
+            //listenNotesService.main()
+            listenNotesService.getDetailedInfo()
+        }
+        return ""
+    }
 }
