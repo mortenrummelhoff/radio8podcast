@@ -39,10 +39,8 @@ import java.util.concurrent.Executors;
 
 import org.chromium.net.CronetEngine;
 
-import dk.mhr.radio8podcast.BuildConfig;
-
 /** Utility methods for the demo app. */
-public final class DemoUtils {
+public final class PodcastUtils {
 
     public static final String DOWNLOAD_NOTIFICATION_CHANNEL_ID = "download_channel";
 
@@ -137,7 +135,7 @@ public final class DemoUtils {
         return downloadTracker;
     }
 
-    private static synchronized Cache getDownloadCache(Context context) {
+    public static synchronized Cache getDownloadCache(Context context) {
         if (downloadCache == null) {
             File downloadContentDirectory =
                     new File(getDownloadDirectory(context), DOWNLOAD_CONTENT_DIRECTORY);
@@ -188,5 +186,5 @@ public final class DemoUtils {
                 .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
     }
 
-    private DemoUtils() {}
+    private PodcastUtils() {}
 }

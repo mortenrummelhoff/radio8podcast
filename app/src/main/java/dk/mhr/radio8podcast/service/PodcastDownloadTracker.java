@@ -104,12 +104,14 @@ public class PodcastDownloadTracker {
         return download != null && download.state != Download.STATE_FAILED ? download.request : null;
     }
 
+
+
     public void toggleDownload(
             FragmentManager fragmentManager, MediaItem mediaItem, RenderersFactory renderersFactory) {
         @Nullable Download download = downloads.get(checkNotNull(mediaItem.localConfiguration).uri);
         if (download != null && download.state != Download.STATE_FAILED) {
             DownloadService.sendRemoveDownload(
-                    context, DemoDownloadService.class, download.request.id, /* foreground= */ false);
+                    context, PodcastDownloadService.class, download.request.id, /* foreground= */ false);
         } else {
             if (startDownloadDialogHelper != null) {
                 startDownloadDialogHelper.release();
@@ -131,7 +133,11 @@ public class PodcastDownloadTracker {
         } catch (IOException e) {
             Log.w(TAG, "Failed to query downloads", e);
         }
+
+        Log.i("MHR", "Downloads loaded: " + downloads.size());
     }
+
+
 
     private class DownloadManagerListener implements DownloadManager.Listener {
 
@@ -343,7 +349,7 @@ public class PodcastDownloadTracker {
 
         private void startDownload(DownloadRequest downloadRequest) {
             DownloadService.sendAddDownload(
-                    context, DemoDownloadService.class, downloadRequest, /* foreground= */ false);
+                    context, PodcastDownloadService.class, downloadRequest, /* foreground= */ false);
         }
 
         private DownloadRequest buildDownloadRequest() {

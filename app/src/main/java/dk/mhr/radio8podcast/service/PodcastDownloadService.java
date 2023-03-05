@@ -16,12 +16,12 @@ package dk.mhr.radio8podcast.service;
  */
 
 
-import static dk.mhr.radio8podcast.service.DemoUtils.DOWNLOAD_NOTIFICATION_CHANNEL_ID;
+import static dk.mhr.radio8podcast.service.PodcastUtils.DOWNLOAD_NOTIFICATION_CHANNEL_ID;
 
 import android.app.Notification;
 import android.content.Context;
+
 import androidx.annotation.Nullable;
-import androidx.compose.foundation.gestures.TapGestureDetectorKt;
 
 import com.google.android.exoplayer2.offline.Download;
 import com.google.android.exoplayer2.offline.DownloadManager;
@@ -33,17 +33,18 @@ import com.google.android.exoplayer2.ui.DownloadNotificationHelper;
 import com.google.android.exoplayer2.util.Log;
 import com.google.android.exoplayer2.util.NotificationUtil;
 import com.google.android.exoplayer2.util.Util;
+
 import java.util.List;
 
 import dk.mhr.radio8podcast.R;
 
 /** A service for downloading media. */
-public class DemoDownloadService extends DownloadService {
+public class PodcastDownloadService extends DownloadService {
 
     private static final int JOB_ID = 1;
     private static final int FOREGROUND_NOTIFICATION_ID = 1;
 
-    public DemoDownloadService() {
+    public PodcastDownloadService() {
         super(
                 FOREGROUND_NOTIFICATION_ID,
                 DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL,
@@ -58,9 +59,9 @@ public class DemoDownloadService extends DownloadService {
     protected DownloadManager getDownloadManager() {
         // This will only happen once, because getDownloadManager is guaranteed to be called only once
         // in the life cycle of the process.
-        DownloadManager downloadManager = DemoUtils.getDownloadManager(/* context= */ this);
+        DownloadManager downloadManager = PodcastUtils.getDownloadManager(/* context= */ this);
         DownloadNotificationHelper downloadNotificationHelper =
-                DemoUtils.getDownloadNotificationHelper(/* context= */ this);
+                PodcastUtils.getDownloadNotificationHelper(/* context= */ this);
         downloadManager.addListener(
                 new TerminalStateNotificationHelper(
                         this, downloadNotificationHelper, FOREGROUND_NOTIFICATION_ID + 1));
@@ -76,7 +77,7 @@ public class DemoDownloadService extends DownloadService {
     protected Notification getForegroundNotification(
             List<Download> downloads, @Requirements.RequirementFlags int notMetRequirements) {
         //return null;
-        return DemoUtils.getDownloadNotificationHelper(/* context= */ this)
+        return PodcastUtils.getDownloadNotificationHelper(/* context= */ this)
                 .buildProgressNotification(
                         /* context= */ this,
                         R.drawable.ic_download,
@@ -89,8 +90,8 @@ public class DemoDownloadService extends DownloadService {
     /**
      * Creates and displays notifications for downloads when they complete or fail.
      *
-     * <p>This helper will outlive the lifespan of a single instance of {@link DemoDownloadService}.
-     * It is static to avoid leaking the first {@link DemoDownloadService} instance.
+     * <p>This helper will outlive the lifespan of a single instance of {@link PodcastDownloadService}.
+     * It is static to avoid leaking the first {@link PodcastDownloadService} instance.
      */
     private static final class TerminalStateNotificationHelper implements DownloadManager.Listener {
 
@@ -112,8 +113,6 @@ public class DemoDownloadService extends DownloadService {
             Notification notification;
 
             Log.i("MHR", "onDownloadChanged called: " + download.state);
-
-
 
             if (download.state == Download.STATE_COMPLETED) {
                 notification =

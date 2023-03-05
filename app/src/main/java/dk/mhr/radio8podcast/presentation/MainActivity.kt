@@ -31,12 +31,12 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.RenderersFactory
 import com.google.android.exoplayer2.offline.DownloadRequest
 import com.google.android.exoplayer2.offline.DownloadService
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
-import dk.mhr.radio8podcast.service.DemoDownloadService
+import dk.mhr.radio8podcast.service.PodcastDownloadService
+import dk.mhr.radio8podcast.service.PodcastUtils
 import dk.mhr.radio8podcast.service.PodcastService
 import kotlinx.coroutines.Dispatchers
 
@@ -59,10 +59,14 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
 
             val player = ExoPlayer.Builder(this).build()
 
+            PodcastUtils.getDownloadTracker(this).addListener {
+                Log.i("MHR", "onDownloadsChanged called. UI update")
+            }
+
+
             Log.i(DEBUG_LOG, "Oncreate called we have player: $player")
             PodCastNavHost("WearApp", this, this, player)
         }
-
     }
 }
 
@@ -185,10 +189,12 @@ fun PodCastNavHost(
                 Log.i("MHR", "Download Podcast clicked!: $title, Link: $link, audio: $audio")
 
                 val downloadRequest: DownloadRequest =
-                    DownloadRequest.Builder(audio, Uri.parse(audio)).build()
-                DownloadService.sendAddDownload(
-                    context,
-                    DemoDownloadService::class.java,
+                    DownloadRequest.Builder(title, Uri.parse(audio)).setData(
+                        title.encodeToByteArray()
+                    ).build()
+
+                DownloadService.sendAddDownload(context,
+                    PodcastDownloadService::class.java,
                     downloadRequest,
                     false
                 )
@@ -203,7 +209,7 @@ fun PodCastNavHost(
 
                 // Build the media item.
                 // Build the media item.
-//                val mediaItem: MediaItem = MediaItem.fromUri(audio)
+                //val mediaItem: MediaItem = MediaItem.fromUri(audio)
 //                player.setMediaItem(mediaItem)
 //                player.prepare()
 //                player.play()
@@ -211,7 +217,15 @@ fun PodCastNavHost(
             }, lifecycleOwner)
         }
         composable("SeeDownloads") {
-            SeeDownloadListComposable().SeeDownloadList()
+            SeeDownloadListComposable(
+                PodcastUtils.getDownloadTracker(context),
+                PodcastUtils.getDownloadManager(context).downloadIndex).SeeDownloadList(onPodCastListen = { audio ->
+
+                val mediaItem: MediaItem = MediaItem.fromUri(audio)
+                player.setMediaItem(mediaItem)
+                player.prepare()
+                player.play()
+            })
         }
     }
 

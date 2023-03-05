@@ -40,7 +40,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".service.DemoDownloadService"
+        <service android:name=".service.PodcastDownloadService"
             android:exported="false">
             <!-- This is needed for Scheduler -->
             <intent-filter>
