@@ -1,3 +1,5 @@
 <resources>
     <string name="hello_world">From the Round world,\nHello, %1$s!</string>
+    <string name="notification_channelname">ra8io_channel</string>
+    <string name="notification_channelresource">ra8io_channel_res</string>
 </resources>

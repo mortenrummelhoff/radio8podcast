@@ -8,6 +8,8 @@ package dk.mhr.radio8podcast.presentation
 
 //import androidx.compose.foundation.interaction.collectIsPressedAsState
 
+import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -29,8 +31,12 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.RenderersFactory
+import com.google.android.exoplayer2.offline.DownloadRequest
+import com.google.android.exoplayer2.offline.DownloadService
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
+import dk.mhr.radio8podcast.service.DemoDownloadService
 import dk.mhr.radio8podcast.service.PodcastService
 import kotlinx.coroutines.Dispatchers
 
@@ -39,8 +45,7 @@ var podcastService = PodcastService(Dispatchers.IO)
 var podcastViewModel = PodcastViewModel(podcastService);
 val DEBUG_LOG = "MHR";
 
-class MainActivity : ComponentActivity(), LifecycleOwner
-{
+class MainActivity : ComponentActivity(), LifecycleOwner {
 
 //    init {
     //val string = resources.getString(dk.mhr.radio8podcast.R.string.api_key);
@@ -48,17 +53,14 @@ class MainActivity : ComponentActivity(), LifecycleOwner
     //  }
 
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
 
             val player = ExoPlayer.Builder(this).build()
-            //player.
 
             Log.i(DEBUG_LOG, "Oncreate called we have player: $player")
-            PodCastNavHost("WearApp", this, player)
+            PodCastNavHost("WearApp", this, this, player)
         }
 
     }
@@ -66,7 +68,7 @@ class MainActivity : ComponentActivity(), LifecycleOwner
 
 
 @Composable
-fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit) {
+fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit, onNavigateToSeeDownloadList: () -> Unit) {
 
     Log.i("MHR", "FetchPodcasts called. Show chip with button action")
     val interactionSource = remember { MutableInteractionSource() }
@@ -130,15 +132,15 @@ fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit) {
         }
     )
     Spacer(Modifier.size(padding))
-    Chip(onClick = onNavigateToShowPodcasts,
-    colors = ChipDefaults.chipColors(contentColor = MaterialTheme.colors.background),
-    label = {
-        Text(text = "Downloads")
-    },
-    secondaryLabel = {
-        //Log.i("MHR", "secondaryLabel->" + podcastViewModel.podcasts.value)
-        Text("Click to see")
-    }
+    Chip(onClick = onNavigateToSeeDownloadList,
+        colors = ChipDefaults.chipColors(contentColor = MaterialTheme.colors.background),
+        label = {
+            Text(text = "Downloads")
+        },
+        secondaryLabel = {
+            //Log.i("MHR", "secondaryLabel->" + podcastViewModel.podcasts.value)
+            Text("Click to see")
+        }
     )
 
 }
@@ -148,6 +150,7 @@ fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit) {
 fun PodCastNavHost(
     startDestination: String = "WearApp",
     lifecycleOwner: LifecycleOwner,
+    context: Context,
     player: ExoPlayer,
     modifier: Modifier = Modifier
 ) {
@@ -166,41 +169,49 @@ fun PodCastNavHost(
             WearApp(onNavigateToFetchPodcast = {
                 Log.i("MHR", "Calling navigate to ShowPodcasts")
                 podcastViewModel.loadPodcast(API_KEY)
-                podcastViewModel.podcasts.observe(lifecycleOwner as LifecycleOwner) { t ->
+                podcastViewModel.podcasts.observe(lifecycleOwner) { t ->
                     podcastViewModel.podcastList = t
                     Log.i("MHR", "Observe called...")
-                    navController.navigate("ShowPodcasts"){popUpTo("WearApp")}
+                    navController.navigate("ShowPodcasts") { popUpTo("WearApp") }
                 }
-            })
+            },
+                onNavigateToSeeDownloadList = {
+                    navController.navigate("SeeDownloads")
+                })
         }
         composable("ShowPodcasts") {
             //Log.i(DEBUG_LOG, "backStackEntry: ${it.destination}")
-            PodcastListComposable(podcastViewModel).ShowPodcastList(onPodCastDownload = {
-                title, link, audio ->
-                Log.i("MHR", "Podcast clicked!: $title, Link: $link, audio: $audio" )
+            PodcastListComposable(podcastViewModel).ShowPodcastList(onPodCastDownload = { title, link, audio ->
+                Log.i("MHR", "Download Podcast clicked!: $title, Link: $link, audio: $audio")
 
-                if (player.isPlaying) {
-                    //player.release()
+                val downloadRequest: DownloadRequest =
+                    DownloadRequest.Builder(audio, Uri.parse(audio)).build()
+                DownloadService.sendAddDownload(
+                    context,
+                    DemoDownloadService::class.java,
+                    downloadRequest,
+                    false
+                )
 
-                }
+//                if (player.isPlaying) {
+//                    //player.release()
+//
+//                }
 
 //                val audioManager: AudioManager =
 //                    context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
                 // Build the media item.
                 // Build the media item.
-                val mediaItem: MediaItem = MediaItem.fromUri(audio)
-// Set the media item to be played.
-// Set the media item to be played.
-                player.setMediaItem(mediaItem)
-// Prepare the player.
-// Prepare the player.
-                player.prepare()
-// Start the playback.
-// Start the playback.
-                player.play()
+//                val mediaItem: MediaItem = MediaItem.fromUri(audio)
+//                player.setMediaItem(mediaItem)
+//                player.prepare()
+//                player.play()
 
             }, lifecycleOwner)
+        }
+        composable("SeeDownloads") {
+            SeeDownloadListComposable().SeeDownloadList()
         }
     }
 
@@ -208,7 +219,8 @@ fun PodCastNavHost(
 
 @Composable
 fun WearApp(
-    onNavigateToFetchPodcast: () -> Unit
+    onNavigateToFetchPodcast: () -> Unit,
+    onNavigateToSeeDownloadList: () -> Unit
 ) {
 
     Radio8podcastTheme {
@@ -225,7 +237,7 @@ fun WearApp(
         ) {
             Log.i("MHR", "WearApp called")
             //Greeting(greetingName = greetingName)
-            FetchPodcasts(onNavigateToFetchPodcast)
+            FetchPodcasts(onNavigateToFetchPodcast, onNavigateToSeeDownloadList)
         }
 
     }

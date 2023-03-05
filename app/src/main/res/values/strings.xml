@@ -5,4 +5,10 @@
     values-round/strings.xml for round devices.
     -->
     <string name="hello_world">From the Square world,\nHello, %1$s!</string>
+    <string name="notification_channelname">ra8io_channel</string>
+    <string name="notification_channelresource">ra8io_channel_res</string>
+    <string name="error_drm_unsupported_before_api_18">unsupported</string>
+    <string name="download_start_error_offline_license">download error licence</string>
+    <string name="download_live_unsupported">download live unsupported</string>
+    <string name="download_start_error">donwload error</string>
 </resources>
