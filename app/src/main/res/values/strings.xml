@@ -11,4 +11,6 @@
     <string name="download_start_error_offline_license">download error licence</string>
     <string name="download_live_unsupported">download live unsupported</string>
     <string name="download_start_error">donwload error</string>
+    <string name="increateVolume">Increase</string>
+    <string name="decreateVolume">decrease</string>
 </resources>

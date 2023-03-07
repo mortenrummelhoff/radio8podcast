@@ -25,20 +25,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
+import androidx.navigation.*
 import androidx.wear.compose.material.*
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.offline.DownloadRequest
 import com.google.android.exoplayer2.offline.DownloadService
 import dk.mhr.radio8podcast.R
+import dk.mhr.radio8podcast.presentation.navigation.AUDIO_URL
+import dk.mhr.radio8podcast.presentation.navigation.Screen
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import dk.mhr.radio8podcast.service.PodcastDownloadService
 import dk.mhr.radio8podcast.service.PodcastUtils
 import dk.mhr.radio8podcast.service.PodcastService
 import kotlinx.coroutines.Dispatchers
+import java.net.URLEncoder
+import java.nio.charset.Charset
+import java.util.Base64.Encoder
 
 
 var podcastService = PodcastService(Dispatchers.IO)
@@ -47,18 +52,12 @@ val DEBUG_LOG = "MHR";
 
 class MainActivity : ComponentActivity(), LifecycleOwner {
 
-//    init {
-    //val string = resources.getString(dk.mhr.radio8podcast.R.string.api_key);
-    //    Log.i("MHR", "Key: " + string)
-    //  }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
-
             val player = ExoPlayer.Builder(this).build()
-
             PodcastUtils.getDownloadTracker(this).addListener {
                 Log.i("MHR", "onDownloadsChanged called. UI update")
             }
@@ -80,9 +79,9 @@ fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit, onNavigateToSeeDownloadL
     val isDragged by interactionSource.collectIsDraggedAsState()
     //val isPressed by interactionSource.collectIsPressedAsState()
 
+
     val asState: State<Boolean> = interactionSource.collectIsPressedAsState()
     val padding = 6.dp
-    // var prut =
 
 //    podcasts.observe(this, Observer {
 //
@@ -169,21 +168,21 @@ fun PodCastNavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        composable("WearApp") {
+        composable(Screen.Landing.route) {
             WearApp(onNavigateToFetchPodcast = {
                 Log.i("MHR", "Calling navigate to ShowPodcasts")
                 podcastViewModel.loadPodcast(API_KEY)
                 podcastViewModel.podcasts.observe(lifecycleOwner) { t ->
                     podcastViewModel.podcastList = t
                     Log.i("MHR", "Observe called...")
-                    navController.navigate("ShowPodcasts") { popUpTo("WearApp") }
+                    navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
                 }
             },
                 onNavigateToSeeDownloadList = {
-                    navController.navigate("SeeDownloads")
+                    navController.navigate(Screen.SeeDownloads.route)
                 })
         }
-        composable("ShowPodcasts") {
+        composable(Screen.ShowPodcast.route) {
             //Log.i(DEBUG_LOG, "backStackEntry: ${it.destination}")
             PodcastListComposable(podcastViewModel).ShowPodcastList(onPodCastDownload = { title, link, audio ->
                 Log.i("MHR", "Download Podcast clicked!: $title, Link: $link, audio: $audio")
@@ -193,39 +192,31 @@ fun PodCastNavHost(
                         title.encodeToByteArray()
                     ).build()
 
-                DownloadService.sendAddDownload(context,
+                DownloadService.sendAddDownload(
+                    context,
                     PodcastDownloadService::class.java,
                     downloadRequest,
                     false
                 )
 
-//                if (player.isPlaying) {
-//                    //player.release()
-//
-//                }
-
-//                val audioManager: AudioManager =
-//                    context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
-                // Build the media item.
-                // Build the media item.
-                //val mediaItem: MediaItem = MediaItem.fromUri(audio)
-//                player.setMediaItem(mediaItem)
-//                player.prepare()
-//                player.play()
-
             }, lifecycleOwner)
         }
-        composable("SeeDownloads") {
+        composable(Screen.SeeDownloads.route) {
             SeeDownloadListComposable(
                 PodcastUtils.getDownloadTracker(context),
-                PodcastUtils.getDownloadManager(context).downloadIndex).SeeDownloadList(onPodCastListen = { audio ->
-
-                val mediaItem: MediaItem = MediaItem.fromUri(audio)
-                player.setMediaItem(mediaItem)
-                player.prepare()
-                player.play()
+                PodcastUtils.getDownloadManager(context).downloadIndex
+            ).SeeDownloadList(onPodCastListen = { audio ->
+                navController.navigate(
+                    route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(audio, "UTF8")
+                )
             })
+        }
+        composable(
+            route = Screen.PodcastPlayer.route + "/{" + AUDIO_URL + "}",
+            arguments = listOf(navArgument(AUDIO_URL) { NavType.StringType })
+
+        ) {
+            PodcastPlayerComposable(player).showPlayer(it.arguments?.getString(AUDIO_URL))
         }
     }
 

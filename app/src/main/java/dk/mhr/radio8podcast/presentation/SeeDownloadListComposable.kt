@@ -5,7 +5,7 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -38,6 +38,7 @@ class SeeDownloadListComposable(
         Log.i("MHR", "SeeDownloadList called!")
         Log.i("MHR", "downloadIndex:" + downloadIndex)
         //downloadTracker.
+        var checked by remember { mutableStateOf(true) }
         val terminalDownloads: MutableList<Download> = ArrayList()
         try {
             downloadIndex.getDownloads()
