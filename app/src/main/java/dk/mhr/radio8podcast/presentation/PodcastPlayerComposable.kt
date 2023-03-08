@@ -14,41 +14,55 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.*
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.Player
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 
 class PodcastPlayerComposable(val player: ExoPlayer) {
 
+    var playNow = true
+
+
+    fun startPlay(audio: String?, mediaItem: MediaItem) {
+            Log.i("MHR", "Preparing player: " + audio.toString());
+            player.setMediaItem(mediaItem)
+            player.prepare()
+            Log.i("MHR", "Start play some podcast")
+            player.play()
+            player.addListener(PlayerEventLister())
+    }
+
+    fun stopPlay() {
+        player.pause()
+    }
 
     @Composable
     fun showPlayer(audio: String?) {
 
-        //Log.i("MHR", "Start play some podcast: " + audio.toString());
         var checked by remember { mutableStateOf(true) }
-
-        //val interactionSource = remember { MutableInteractionSource() }
+        playNow = checked
 
         val mediaItem: MediaItem = MediaItem.fromUri(audio.toString())
-
-//        player.play()
-
 
         val padding = 6.dp
 
         val (contentString) = when {
-            checked -> {
-                stringResource(R.string.increateVolume) to stringResource(R.string.increateVolume)
-            }
-            else ->
-                stringResource(R.string.increateVolume) to stringResource(R.string.increateVolume)
+            checked -> stringResource(R.string.increateVolume) to stringResource(R.string.increateVolume)
+            else -> stringResource(R.string.increateVolume) to stringResource(R.string.increateVolume)
         }
 
         val (playIcon) = when {
-            checked -> {
-                painterResource(R.drawable.icons_pause) to painterResource(R.drawable.icons_pause)
-            } else -> painterResource(R.drawable.icons_play) to painterResource(R.drawable.icons_play)
+            checked -> painterResource(R.drawable.icons_pause) to painterResource(R.drawable.icons_pause)
+            else -> painterResource(R.drawable.icons_play) to painterResource(R.drawable.icons_play)
         }
 
+        val (duration) = when {
+            player.isPlaying && checked -> 0 to player.duration/1000 else ->  player.duration/1000 to player.duration/1000
+        }
+
+        if (checked && !player.isPlaying) {
+            startPlay(audio, mediaItem)
+        }
 
         Radio8podcastTheme {
             Column(
@@ -61,27 +75,23 @@ class PodcastPlayerComposable(val player: ExoPlayer) {
 
             ) {
 
-                ToggleButton(
-                    checked = checked,
-                    onCheckedChange = {
-                        checked = it
-                        Log.i("MHR", "Checked: $checked" + ", hasNextMediaItem: " + player.hasNextMediaItem())
-
+                Button(
+                    onClick =
+                    {
+                        checked = !checked
+                        Log.i(
+                            "MHR",
+                            "Checked: $checked" + ", hasNextMediaItem: " + player.hasNextMediaItem()
+                        )
                         if (checked) {
-//                            if (!player.hasNextMediaItem()) {
-                                Log.i("MHR", "Preparing player: " + audio.toString());
-                                player.setMediaItem(mediaItem)
-                                player.prepare()
-//                            }
-                            Log.i("MHR", "Start play some podcast")
-                            player.play()
+                            startPlay(audio, mediaItem)
                         } else {
-                            player.pause()
+                            stopPlay()
                         }
-                    },
+                    }
+                    ,
                     enabled = true
                 ) {
-//                    if (checked) {
                     Icon(
                         contentDescription = contentString,
                         modifier = Modifier
@@ -89,13 +99,10 @@ class PodcastPlayerComposable(val player: ExoPlayer) {
                             .wrapContentSize(align = Alignment.Center),
                         painter = playIcon
                     )
-//                    } else {
-//
-//                    }
-
                 }
 
                 Text(text = "Speed:" + player.playbackParameters.speed)
+                Text(text = "Time: $duration")
                 Button(onClick = {
                     Log.i("MHR", "IncreaseVol called")
                     player.increaseDeviceVolume()
@@ -120,6 +127,34 @@ class PodcastPlayerComposable(val player: ExoPlayer) {
                         painter = painterResource(R.drawable.audio_decrease_level_sound_volume_icon)
                     )
                 }
+            }
+        }
+    }
+
+//    fun onPlayButtonClick() {
+//        Log.i("MHR", "onPlayButtonClick called!!!")
+        //return onPlayButtonClick()
+//        checked = !checked
+//        Log.i(
+//            "MHR",
+//            "Checked: $checked" + ", hasNextMediaItem: " + player.hasNextMediaItem()
+//        )
+//        if (checked) {
+//            Log.i("MHR", "Preparing player: " + audio.toString());
+//            player.setMediaItem(mediaItem)
+//            player.prepare()
+//            Log.i("MHR", "Start play some podcast")
+//            player.play()
+//            player.addListener(PlayerEventLister())
+//        } else {
+//            player.pause()
+//        }
+    //}
+
+    class PlayerEventLister: Player.Listener {
+        override fun onEvents(player: Player, events: Player.Events) {
+            (0 until events.size()).forEach {
+                Log.i("MHR", "onEvents called: $player Event: ${events.get(it)}")
             }
         }
     }

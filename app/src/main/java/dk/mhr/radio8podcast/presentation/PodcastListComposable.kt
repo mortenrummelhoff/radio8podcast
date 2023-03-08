@@ -17,7 +17,15 @@ import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.concurrent.timerTask
 
-class PodcastListComposable(podcastViewModel: PodcastViewModel) : ViewModel() {
+class PodcastListComposable : ViewModel() {
+
+    var jsonArray: JSONArray = JSONArray()
+    init {
+        var lis = podcastViewModel.podcastList
+        var jsonObject = JSONObject(lis)
+        jsonArray = jsonObject.getJSONArray("results")
+        Log.i("MHR", "JsonArray:" + jsonArray.length().toString())
+    }
 
     fun formatLength(totalSecs: Int): String {
         val hours = totalSecs / 3600;
@@ -33,12 +41,6 @@ class PodcastListComposable(podcastViewModel: PodcastViewModel) : ViewModel() {
         lifecycleOwner: LifecycleOwner
     ) {
 
-
-        var lis = podcastViewModel.podcastList
-        var jsonObject = JSONObject(lis)
-        var jsonArray: JSONArray = jsonObject.getJSONArray("results")
-
-        Log.i("MHR", "JsonArray:" + jsonArray.length().toString())
         val padding = 6.dp
         Radio8podcastTheme {
             Column(

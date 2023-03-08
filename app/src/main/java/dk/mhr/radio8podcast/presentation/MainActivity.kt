@@ -184,7 +184,7 @@ fun PodCastNavHost(
         }
         composable(Screen.ShowPodcast.route) {
             //Log.i(DEBUG_LOG, "backStackEntry: ${it.destination}")
-            PodcastListComposable(podcastViewModel).ShowPodcastList(onPodCastDownload = { title, link, audio ->
+            PodcastListComposable().ShowPodcastList(onPodCastDownload = { title, link, audio ->
                 Log.i("MHR", "Download Podcast clicked!: $title, Link: $link, audio: $audio")
 
                 val downloadRequest: DownloadRequest =
