@@ -24,7 +24,6 @@ class PodcastListComposable : ViewModel() {
         var lis = podcastViewModel.podcastList
         var jsonObject = JSONObject(lis)
         jsonArray = jsonObject.getJSONArray("results")
-        Log.i("MHR", "JsonArray:" + jsonArray.length().toString())
     }
 
     fun formatLength(totalSecs: Int): String {
@@ -52,7 +51,6 @@ class PodcastListComposable : ViewModel() {
                 horizontalAlignment = Alignment.CenterHorizontally
 
             ) {
-                Log.i("MHR", "WearApp called")
                 (0 until jsonArray.length()).forEach {
                     val record = jsonArray.getJSONObject(it)
                     Spacer(Modifier.size(padding))

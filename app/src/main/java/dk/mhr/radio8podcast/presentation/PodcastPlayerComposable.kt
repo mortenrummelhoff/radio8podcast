@@ -15,24 +15,39 @@ import androidx.wear.compose.material.*
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.Player.Events
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
+import kotlinx.coroutines.delay
+import java.lang.Long
 
-class PodcastPlayerComposable(val player: ExoPlayer) {
+class PodcastPlayerComposable(private val player: ExoPlayer) {
 
-    var playNow = true
+    var contentPositionc: ContentPositionClass = ContentPositionClass(0);
 
+    private fun startPlay(audio: String?, mediaItem: MediaItem, events: () -> Unit) {
+        Log.i("MHR", "Preparing player: " + audio.toString());
+        Log.i(
+            "MHR",
+            "hasNextMediaItem: " + player.hasNextMediaItem() + ", hasPreviousMediaItem: " + player.hasPreviousMediaItem()
+        )
+        Log.i("MHR", "MediaItemCount: " + player.mediaItemCount)
 
-    fun startPlay(audio: String?, mediaItem: MediaItem) {
-            Log.i("MHR", "Preparing player: " + audio.toString());
+        if (player.mediaItemCount == 0) {
             player.setMediaItem(mediaItem)
             player.prepare()
             Log.i("MHR", "Start play some podcast")
-            player.play()
-            player.addListener(PlayerEventLister())
+            player.addListener(PlayerEventLister {
+                events
+            })
+
+        }
+        Log.i("MHR", "CurrentMediaItemId" + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition)
+
+        player.play()
     }
 
-    fun stopPlay() {
+    private fun stopPlay() {
         player.pause()
     }
 
@@ -40,7 +55,7 @@ class PodcastPlayerComposable(val player: ExoPlayer) {
     fun showPlayer(audio: String?) {
 
         var checked by remember { mutableStateOf(true) }
-        playNow = checked
+        Log.i("MHR", "What state remembered: $checked")
 
         val mediaItem: MediaItem = MediaItem.fromUri(audio.toString())
 
@@ -57,12 +72,13 @@ class PodcastPlayerComposable(val player: ExoPlayer) {
         }
 
         val (duration) = when {
-            player.isPlaying && checked -> 0 to player.duration/1000 else ->  player.duration/1000 to player.duration/1000
+            player.isPlaying && checked -> 0 to player.duration / 1000
+            else -> player.duration / 1000 to player.duration / 1000
         }
 
-        if (checked && !player.isPlaying) {
-            startPlay(audio, mediaItem)
-        }
+        //var contentPosition = player.contentPosition
+
+
 
         Radio8podcastTheme {
             Column(
@@ -84,12 +100,14 @@ class PodcastPlayerComposable(val player: ExoPlayer) {
                             "Checked: $checked" + ", hasNextMediaItem: " + player.hasNextMediaItem()
                         )
                         if (checked) {
-                            startPlay(audio, mediaItem)
+                            startPlay(audio, mediaItem, events = {
+
+                            })
                         } else {
                             stopPlay()
                         }
-                    }
-                    ,
+
+                    },
                     enabled = true
                 ) {
                     Icon(
@@ -100,8 +118,16 @@ class PodcastPlayerComposable(val player: ExoPlayer) {
                         painter = playIcon
                     )
                 }
+                LaunchedEffect(contentPositionc) {
+                    while(true) {
 
-                Text(text = "Speed:" + player.playbackParameters.speed)
+                        contentPositionc.con = player.contentPosition
+                        Log.i("MHR", "Am I called here??" + contentPositionc.con)
+                        delay(3000)
+
+                    }
+                }
+                Text(text = "P:" + contentPositionc.con)
                 Text(text = "Time: $duration")
                 Button(onClick = {
                     Log.i("MHR", "IncreaseVol called")
@@ -133,7 +159,7 @@ class PodcastPlayerComposable(val player: ExoPlayer) {
 
 //    fun onPlayButtonClick() {
 //        Log.i("MHR", "onPlayButtonClick called!!!")
-        //return onPlayButtonClick()
+    //return onPlayButtonClick()
 //        checked = !checked
 //        Log.i(
 //            "MHR",
@@ -151,12 +177,16 @@ class PodcastPlayerComposable(val player: ExoPlayer) {
 //        }
     //}
 
-    class PlayerEventLister: Player.Listener {
+    class PlayerEventLister(val eventHappened:(k: Int) -> Unit ) : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             (0 until events.size()).forEach {
                 Log.i("MHR", "onEvents called: $player Event: ${events.get(it)}")
+                eventHappened(events.get(it))
             }
         }
+    }
+
+    class ContentPositionClass(var con: kotlin.Long) {
     }
 
 }

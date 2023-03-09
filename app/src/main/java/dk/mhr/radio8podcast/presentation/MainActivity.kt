@@ -15,6 +15,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -73,7 +74,7 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
 @Composable
 fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit, onNavigateToSeeDownloadList: () -> Unit) {
 
-    Log.i("MHR", "FetchPodcasts called. Show chip with button action")
+    // Log.i("MHR", "FetchPodcasts called. Show chip with button action")
     val interactionSource = remember { MutableInteractionSource() }
 // Observe changes to the binary state for these interactions
     val isDragged by interactionSource.collectIsDraggedAsState()
@@ -81,7 +82,7 @@ fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit, onNavigateToSeeDownloadL
 
 
     val asState: State<Boolean> = interactionSource.collectIsPressedAsState()
-    val padding = 6.dp
+
 
 //    podcasts.observe(this, Observer {
 //
@@ -124,27 +125,6 @@ fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit, onNavigateToSeeDownloadL
 //        else -> "sdf"
 //    }
 
-    Chip(onClick = onNavigateToShowPodcasts,
-        colors = ChipDefaults.chipColors(contentColor = MaterialTheme.colors.background),
-        label = {
-            Text(text = "Undskyld vi roder")
-        },
-        secondaryLabel = {
-            Log.i("MHR", "secondaryLabel->" + podcastViewModel.podcasts.value)
-            Text("Click to fetch")
-        }
-    )
-    Spacer(Modifier.size(padding))
-    Chip(onClick = onNavigateToSeeDownloadList,
-        colors = ChipDefaults.chipColors(contentColor = MaterialTheme.colors.background),
-        label = {
-            Text(text = "Downloads")
-        },
-        secondaryLabel = {
-            //Log.i("MHR", "secondaryLabel->" + podcastViewModel.podcasts.value)
-            Text("Click to see")
-        }
-    )
 
 }
 
@@ -172,10 +152,13 @@ fun PodCastNavHost(
             WearApp(onNavigateToFetchPodcast = {
                 Log.i("MHR", "Calling navigate to ShowPodcasts")
                 podcastViewModel.loadPodcast(API_KEY)
-                podcastViewModel.podcasts.observe(lifecycleOwner) { t ->
-                    podcastViewModel.podcastList = t
-                    Log.i("MHR", "Observe called...")
-                    navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
+
+                if (!podcastViewModel.podcasts.hasObservers()) {
+                    podcastViewModel.podcasts.observe(lifecycleOwner) { t ->
+                        podcastViewModel.podcastList = t
+                        Log.i("MHR", "Observe called...")
+                        navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
+                    }
                 }
             },
                 onNavigateToSeeDownloadList = {
@@ -208,7 +191,7 @@ fun PodCastNavHost(
             ).SeeDownloadList(onPodCastListen = { audio ->
                 navController.navigate(
                     route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(audio, "UTF8")
-                )
+                ) { popUpTo(Screen.Landing.route) }
             })
         }
         composable(
@@ -228,6 +211,8 @@ fun WearApp(
     onNavigateToSeeDownloadList: () -> Unit
 ) {
 
+    val padding = 6.dp
+    Log.i("MHR", "WearApp called")
     Radio8podcastTheme {
         /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
          * version of LazyColumn for wear devices with some added features. For more information,
@@ -240,9 +225,29 @@ fun WearApp(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Log.i("MHR", "WearApp called")
+            Chip(onClick = onNavigateToFetchPodcast,
+                colors = ChipDefaults.chipColors(contentColor = MaterialTheme.colors.background),
+                modifier = Modifier.clickable { Log.i("MHR", "We have click!!") },
+                label = {
+                    Text(text = "Undskyld vi roder")
+                },
+                secondaryLabel = {
+                    Text("Click to fetch")
+                }
+            )
+            Spacer(Modifier.size(padding))
+            Chip(onClick = onNavigateToSeeDownloadList,
+                colors = ChipDefaults.chipColors(contentColor = MaterialTheme.colors.background),
+                label = {
+                    Text(text = "Downloads")
+                },
+                secondaryLabel = {
+                    //Log.i("MHR", "secondaryLabel->" + podcastViewModel.podcasts.value)
+                    Text("Click to see")
+                }
+            )
             //Greeting(greetingName = greetingName)
-            FetchPodcasts(onNavigateToFetchPodcast, onNavigateToSeeDownloadList)
+            //FetchPodcasts(onNavigateToFetchPodcast, onNavigateToSeeDownloadList)
         }
 
     }
