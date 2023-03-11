@@ -20,10 +20,11 @@ import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import kotlinx.coroutines.delay
 import java.lang.Long
+import java.lang.StringBuilder
 
 class PodcastPlayerComposable(private val player: ExoPlayer) {
 
-    var contentPositionc: ContentPositionClass = ContentPositionClass(0);
+
 
     private fun startPlay(audio: String?, mediaItem: MediaItem, events: () -> Unit) {
         Log.i("MHR", "Preparing player: " + audio.toString());
@@ -59,6 +60,8 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 
         val mediaItem: MediaItem = MediaItem.fromUri(audio.toString())
 
+        var contentPositionString by remember { mutableStateOf( "")}
+
         val padding = 6.dp
 
         val (contentString) = when {
@@ -78,7 +81,17 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 
         //var contentPosition = player.contentPosition
 
+        LaunchedEffect(Unit) {
+            while(true) {
+                //contentPositionc.con.clear()
+                //contentPositionc.con.append(player.contentPosition.toString())
+                //contentPositionc = contentPositionc.copy(con = StringBuilder(player.contentPosition.toString()))
+                contentPositionString = player.contentPosition.toString()
+                Log.i("MHR", "Am I called here??$contentPositionString")
+                delay(1000)
 
+            }
+        }
 
         Radio8podcastTheme {
             Column(
@@ -118,16 +131,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                         painter = playIcon
                     )
                 }
-                LaunchedEffect(contentPositionc) {
-                    while(true) {
-
-                        contentPositionc.con = player.contentPosition
-                        Log.i("MHR", "Am I called here??" + contentPositionc.con)
-                        delay(3000)
-
-                    }
-                }
-                Text(text = "P:" + contentPositionc.con)
+                Text(contentPositionString)
                 Text(text = "Time: $duration")
                 Button(onClick = {
                     Log.i("MHR", "IncreaseVol called")
@@ -186,7 +190,6 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         }
     }
 
-    class ContentPositionClass(var con: kotlin.Long) {
-    }
+    data class ContentPositionClass(var con: String)
 
 }
