@@ -47,7 +47,6 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
             player.addListener(PlayerEventLister {
                 events
             })
-
         }
 
         Log.i("MHR", "CurrentMediaItemId" + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition)
@@ -82,21 +81,14 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
             else -> painterResource(R.drawable.icons_play) to painterResource(R.drawable.icons_play)
         }
 
-
-
         //var contentPosition = player.contentPosition
 
         LaunchedEffect(Unit) {
             while(true) {
-                //contentPositionc.con.clear()
-                //contentPositionc.con.append(player.contentPosition.toString())
-                //contentPositionc = contentPositionc.copy(con = StringBuilder(player.contentPosition.toString()))
                 contentPositionString = formatLength(totalSecs = player.contentPosition)
-
                 if (player.isPlaying) {
                     duration = formatLength(player.duration)
                 }
-                Log.i("MHR", "Am I called here??$contentPositionString")
                 delay(1000)
 
             }

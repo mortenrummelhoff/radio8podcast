@@ -53,17 +53,44 @@ var podcastService = PodcastService(Dispatchers.IO)
 var podcastViewModel = PodcastViewModel(podcastService);
 val DEBUG_LOG = "MHR";
 
+
+
 class MainActivity : ComponentActivity(), LifecycleOwner {
 
+    //var listenEvent: () -> Unit
+    //var player:ExoPlayer
+
+//    init{
+//        val player = ExoPlayer.Builder(this).build()
+//        val downloadIndex = PodcastUtils.getDownloadManager(this).downloadIndex
+//        podcastViewModel.fetchDownloadList(downloadIndex)
+//
+//        PodcastUtils.getDownloadTracker(this).addListener {
+//            podcastViewModel.fetchDownloadList(downloadIndex)
+//        }
+//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
+
             val player = ExoPlayer.Builder(this).build()
+            val downloadIndex = PodcastUtils.getDownloadManager(this).downloadIndex
+            //podcastViewModel.fetchDownloadList(downloadIndex)
+
             PodcastUtils.getDownloadTracker(this).addListener {
-                Log.i("MHR", "onDownloadsChanged called. UI update")
+                podcastViewModel.fetchDownloadList(downloadIndex)
             }
+//                if (!podcastViewModel.downloadChanged.hasObservers()) {
+//                    podcastViewModel.downloadChanged.observe(this){
+//                        podcastViewModel.fetchDownloadList(downloadIndex)
+//                    }
+//                }
+
+                //Log.i("MHR", "onDownloadsChanged called. UI update")
+                //podcastViewModel.downloadChanged.postValue("UPDATE_UI")
+            //}
 
 
             Log.i(DEBUG_LOG, "Oncreate called we have player: $player")
@@ -164,6 +191,7 @@ fun PodCastNavHost(
                 }
             },
                 onNavigateToSeeDownloadList = {
+                    podcastViewModel.fetchDownloadList(PodcastUtils.getDownloadManager(context).downloadIndex)
                     navController.navigate(Screen.SeeDownloads.route)
                 })
         }
@@ -189,7 +217,8 @@ fun PodCastNavHost(
         composable(Screen.SeeDownloads.route) {
             SeeDownloadListComposable(
                 PodcastUtils.getDownloadTracker(context),
-                PodcastUtils.getDownloadManager(context).downloadIndex
+                PodcastUtils.getDownloadManager(context).downloadIndex,
+                lifecycleOwner
             ).SeeDownloadList(onPodCastListen = { audio, title ->
                 navController.navigate(
                     route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(title, "UTF8")

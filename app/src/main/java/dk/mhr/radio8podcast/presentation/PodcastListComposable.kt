@@ -1,5 +1,6 @@
 package dk.mhr.radio8podcast.presentation
 
+import android.media.Image
 import android.util.Log
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -8,16 +9,21 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.wear.compose.material.*
+import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
+import dk.mhr.radio8podcast.service.PodcastUtils
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.concurrent.timerTask
 
-class PodcastListComposable : ViewModel() {
+class PodcastListComposable {
 
     var jsonArray: JSONArray = JSONArray()
     init {
@@ -66,9 +72,20 @@ class PodcastListComposable : ViewModel() {
                         title = {
                             Text(text = "${record.get("title_original")}", maxLines = 2)
                         },
-                        contentColor = MaterialTheme.colors.background,
                     ) {
-                        Text(text = formatLength(totalSecs = "${record.get("audio_length_sec")}".toInt()))
+                        Row {
+                            Text(text = formatLength(totalSecs = "${record.get("audio_length_sec")}".toInt()))
+                            Spacer(modifier = Modifier.size(6.dp))
+
+                            Button(onClick = {}, modifier = Modifier.size(24.dp).wrapContentSize(Alignment.Center)) {
+                                Icon(
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                        //.wrapContentSize(align = Alignment.Center, ),
+                                    painter = painterResource(R.drawable.ic_download)
+                                )
+                            }
+                        }
                     }
 
                 }
