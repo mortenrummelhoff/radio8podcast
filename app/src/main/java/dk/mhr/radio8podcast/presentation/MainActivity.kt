@@ -37,11 +37,13 @@ import com.google.android.exoplayer2.offline.DownloadService
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.navigation.AUDIO_URL
 import dk.mhr.radio8podcast.presentation.navigation.Screen
+import dk.mhr.radio8podcast.presentation.navigation.TITLE
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import dk.mhr.radio8podcast.service.PodcastDownloadService
 import dk.mhr.radio8podcast.service.PodcastUtils
 import dk.mhr.radio8podcast.service.PodcastService
 import kotlinx.coroutines.Dispatchers
+import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.util.Base64.Encoder
@@ -188,18 +190,18 @@ fun PodCastNavHost(
             SeeDownloadListComposable(
                 PodcastUtils.getDownloadTracker(context),
                 PodcastUtils.getDownloadManager(context).downloadIndex
-            ).SeeDownloadList(onPodCastListen = { audio ->
+            ).SeeDownloadList(onPodCastListen = { audio, title ->
                 navController.navigate(
-                    route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(audio, "UTF8")
+                    route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(title, "UTF8")
                 ) { popUpTo(Screen.Landing.route) }
             })
         }
         composable(
-            route = Screen.PodcastPlayer.route + "/{" + AUDIO_URL + "}",
-            arguments = listOf(navArgument(AUDIO_URL) { NavType.StringType })
+            route = Screen.PodcastPlayer.route + "/{" + AUDIO_URL + "}/{" + TITLE + "}",
+            arguments = listOf(navArgument(AUDIO_URL) { NavType.StringType }, navArgument(TITLE) {NavType.StringType})
 
         ) {
-            PodcastPlayerComposable(player).showPlayer(it.arguments?.getString(AUDIO_URL))
+            PodcastPlayerComposable(player).showPlayer(it.arguments?.getString(AUDIO_URL), URLDecoder.decode(it.arguments?.getString(TITLE),"UTF8") )
         }
     }
 

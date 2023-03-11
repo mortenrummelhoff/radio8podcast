@@ -3,6 +3,7 @@ package dk.mhr.radio8podcast.presentation
 import android.util.Log
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
@@ -19,12 +20,17 @@ import com.google.android.exoplayer2.Player.Events
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import kotlinx.coroutines.delay
-import java.lang.Long
 import java.lang.StringBuilder
 
 class PodcastPlayerComposable(private val player: ExoPlayer) {
 
+    fun formatLength(totalSecs: Long): String {
+        val hours = totalSecs/1000 / 3600;
+        val minutes = (totalSecs/1000 % 3600) / 60;
+        val seconds = totalSecs/1000 % 60;
 
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
 
     private fun startPlay(audio: String?, mediaItem: MediaItem, events: () -> Unit) {
         Log.i("MHR", "Preparing player: " + audio.toString());
@@ -43,9 +49,11 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
             })
 
         }
+
         Log.i("MHR", "CurrentMediaItemId" + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition)
 
         player.play()
+        player.setPlaybackSpeed(1.0f)
     }
 
     private fun stopPlay() {
@@ -53,7 +61,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
     }
 
     @Composable
-    fun showPlayer(audio: String?) {
+    fun showPlayer(audio: String?, title: String?) {
 
         var checked by remember { mutableStateOf(true) }
         Log.i("MHR", "What state remembered: $checked")
@@ -61,7 +69,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         val mediaItem: MediaItem = MediaItem.fromUri(audio.toString())
 
         var contentPositionString by remember { mutableStateOf( "")}
-
+        var duration by remember { mutableStateOf("0") }
         val padding = 6.dp
 
         val (contentString) = when {
@@ -74,10 +82,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
             else -> painterResource(R.drawable.icons_play) to painterResource(R.drawable.icons_play)
         }
 
-        val (duration) = when {
-            player.isPlaying && checked -> 0 to player.duration / 1000
-            else -> player.duration / 1000 to player.duration / 1000
-        }
+
 
         //var contentPosition = player.contentPosition
 
@@ -86,7 +91,11 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                 //contentPositionc.con.clear()
                 //contentPositionc.con.append(player.contentPosition.toString())
                 //contentPositionc = contentPositionc.copy(con = StringBuilder(player.contentPosition.toString()))
-                contentPositionString = player.contentPosition.toString()
+                contentPositionString = formatLength(totalSecs = player.contentPosition)
+
+                if (player.isPlaying) {
+                    duration = formatLength(player.duration)
+                }
                 Log.i("MHR", "Am I called here??$contentPositionString")
                 delay(1000)
 
@@ -131,8 +140,12 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                         painter = playIcon
                     )
                 }
-                Text(contentPositionString)
-                Text(text = "Time: $duration")
+                Spacer(Modifier.size(padding))
+                Text(title.toString(), softWrap = true, maxLines = 2)
+                Text(contentPositionString + " : " + duration)
+                //Text(text = "Time: ")
+                Spacer(Modifier.size(padding))
+                Row {
                 Button(onClick = {
                     Log.i("MHR", "IncreaseVol called")
                     player.increaseDeviceVolume()
@@ -156,6 +169,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                             .wrapContentSize(align = Alignment.Center),
                         painter = painterResource(R.drawable.audio_decrease_level_sound_volume_icon)
                     )
+                }
                 }
             }
         }
