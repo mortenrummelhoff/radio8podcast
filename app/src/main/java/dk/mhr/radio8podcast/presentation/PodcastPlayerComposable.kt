@@ -5,7 +5,16 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -59,7 +68,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         )
 
         player.play()
-        player.setPlaybackSpeed(1.0f)
+        //player.setPlaybackSpeed(1.0f)
     }
 
     private fun stopPlay() {
@@ -71,6 +80,9 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 
         var checked by remember { mutableStateOf(true) }
         Log.i("MHR", "What state remembered: $checked")
+
+        //var playedDownloadList by rememberSaveable { mutableListOf() }
+        //var playedDownloadList by rememberSaveable { mutableStateListOf()}
 
         //val mediaItem: MediaItem = MediaItem.fromUri(audio.toString())
         val mediaItem = download?.request?.toMediaItem()
@@ -175,25 +187,6 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         }
     }
 
-//    fun onPlayButtonClick() {
-//        Log.i("MHR", "onPlayButtonClick called!!!")
-    //return onPlayButtonClick()
-//        checked = !checked
-//        Log.i(
-//            "MHR",
-//            "Checked: $checked" + ", hasNextMediaItem: " + player.hasNextMediaItem()
-//        )
-//        if (checked) {
-//            Log.i("MHR", "Preparing player: " + audio.toString());
-//            player.setMediaItem(mediaItem)
-//            player.prepare()
-//            Log.i("MHR", "Start play some podcast")
-//            player.play()
-//            player.addListener(PlayerEventLister())
-//        } else {
-//            player.pause()
-//        }
-    //}
 
     class PlayerEventLister(val eventHappened: (k: Int) -> Unit) : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
@@ -205,5 +198,8 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
     }
 
     data class ContentPositionClass(var con: String)
+
+
+    data class PlayableDownload(val download: Download, val startPosition: Int)
 
 }

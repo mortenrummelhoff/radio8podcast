@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
@@ -74,12 +75,12 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
 
         setContent {
 
-            val player = ExoPlayer.Builder(this).build()
+            val player = ExoPlayer.Builder(LocalContext.current).build()
             player.experimentalSetOffloadSchedulingEnabled(true)
-            val downloadIndex = PodcastUtils.getDownloadManager(this).downloadIndex
+            val downloadIndex = PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex
             //podcastViewModel.fetchDownloadList(downloadIndex)
 
-            PodcastUtils.getDownloadTracker(this).addListener {
+            PodcastUtils.getDownloadTracker(LocalContext.current).addListener {
                 podcastViewModel.fetchDownloadList(downloadIndex)
             }
 //                if (!podcastViewModel.downloadChanged.hasObservers()) {
@@ -216,14 +217,14 @@ fun PodCastNavHost(
         }
         composable(Screen.SeeDownloads.route) {
             SeeDownloadListComposable(
-                PodcastUtils.getDownloadTracker(context),
-                PodcastUtils.getDownloadManager(context).downloadIndex,
+                PodcastUtils.getDownloadTracker(LocalContext.current),
+                PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex,
                 lifecycleOwner
             ).SeeDownloadList(onPodCastListen = { downloadId, audio, title ->
                 Log.i("MHR", "DownloadId: $downloadId")
                 navController.navigate(
                     route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(downloadId, "UTF8") + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(title, "UTF8")
-                ) { popUpTo(Screen.Landing.route) }
+                ) { popUpTo(Screen.SeeDownloads.route) }
             }, onPodCastDelete = {download ->
                 Log.i("MHR", "Now delete download: ${download.download.request.id}")
                 PodcastUtils.getDownloadManager(context).removeDownload(download.download.request.id)
@@ -234,7 +235,7 @@ fun PodCastNavHost(
             arguments = listOf(navArgument(DOWNLOAD_ID) { NavType.StringType }, navArgument(AUDIO_URL) { NavType.StringType }, navArgument(TITLE) {NavType.StringType})
 
         ) {
-            val download = PodcastUtils.getDownloadManager(context).downloadIndex.getDownload(
+            val download = PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex.getDownload(
                 URLDecoder.decode(
                     it.arguments?.getString(
                         DOWNLOAD_ID

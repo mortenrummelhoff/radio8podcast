@@ -2,6 +2,8 @@ package dk.mhr.radio8podcast.presentation
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +14,11 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 
 class PodcastViewModel(private val podcastService: PodcastService) : ViewModel() {
+
+    init {
+        Log.i("MHR", "PodcastViewModel initialized")
+    }
+
 
     val downloadList = mutableStateListOf<DataDownload>()
 
