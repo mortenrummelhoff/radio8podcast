@@ -43,7 +43,7 @@ class SeeDownloadListComposable(
 
     @Composable
     fun SeeDownloadList(
-        onPodCastListen: (audio: String, title: String) -> Unit,
+        onPodCastListen: (downloadId: String, audio: String, title: String) -> Unit,
         onPodCastDelete: (download: PodcastViewModel.DataDownload) -> Unit
     ) {
         Log.i("MHR", "SeeDownloadList called!")
@@ -58,6 +58,7 @@ class SeeDownloadListComposable(
                     TitleCard(
                         onClick = {
                             onPodCastListen(
+                                download.download.request.id,
                                 download.download.request.uri.toString(),
                                 download.download.request.data.toString(Charset.defaultCharset())
                             )

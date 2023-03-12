@@ -3,7 +3,6 @@ package dk.mhr.radio8podcast.presentation
 import android.util.Log
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
@@ -16,42 +15,48 @@ import androidx.wear.compose.material.*
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.Player.Events
+import com.google.android.exoplayer2.offline.Download
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import kotlinx.coroutines.delay
-import java.lang.StringBuilder
 
 class PodcastPlayerComposable(private val player: ExoPlayer) {
 
     fun formatLength(totalSecs: Long): String {
-        val hours = totalSecs/1000 / 3600;
-        val minutes = (totalSecs/1000 % 3600) / 60;
-        val seconds = totalSecs/1000 % 60;
+        val hours = totalSecs / 1000 / 3600;
+        val minutes = (totalSecs / 1000 % 3600) / 60;
+        val seconds = totalSecs / 1000 % 60;
 
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
-    private fun startPlay(audio: String?, mediaItem: MediaItem, events: () -> Unit) {
+    private fun startPlay(audio: String?, mediaItem: MediaItem?, events: () -> Unit) {
         Log.i("MHR", "Preparing player: " + audio.toString());
         Log.i(
             "MHR",
             "hasNextMediaItem: " + player.hasNextMediaItem() + ", hasPreviousMediaItem: " + player.hasPreviousMediaItem()
         )
-        Log.i("MHR", "MediaItemCount: " + player.mediaItemCount)
 
         if (player.mediaItemCount == 0) {
-            player.setMediaItem(mediaItem)
+            mediaItem?.let { player.setMediaItem(it) }
             player.prepare()
             Log.i("MHR", "Start play some podcast")
-            player.addListener(PlayerEventLister {
-                events
-            })
         } else {
-
+            Log.i("MHR", "player already has media loaded: " + player.currentMediaItem?.mediaId)
+            if (mediaItem?.mediaId.equals(player.currentMediaItem?.mediaId)) {
+                Log.i("MHR", "Same mediaItem. Just continue playing")
+            } else {
+                Log.i("MHR", "new mediaItem selected. Load new into player")
+                mediaItem?.let { player.setMediaItem(it, /* set startposition from rememberSavable */) }
+                player.prepare()
+                Log.i("MHR", "Start play some podcast")
+            }
         }
 
-        Log.i("MHR", "CurrentMediaItemId" + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition)
+        Log.i(
+            "MHR",
+            "CurrentMediaItemId" + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition
+        )
 
         player.play()
         player.setPlaybackSpeed(1.0f)
@@ -62,14 +67,15 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
     }
 
     @Composable
-    fun showPlayer(audio: String?, title: String?) {
+    fun showPlayer(audio: String?, title: String?, download: Download?) {
 
         var checked by remember { mutableStateOf(true) }
         Log.i("MHR", "What state remembered: $checked")
 
-        val mediaItem: MediaItem = MediaItem.fromUri(audio.toString())
+        //val mediaItem: MediaItem = MediaItem.fromUri(audio.toString())
+        val mediaItem = download?.request?.toMediaItem()
 
-        var contentPositionString by remember { mutableStateOf( "")}
+        var contentPositionString by remember { mutableStateOf("") }
         var duration by remember { mutableStateOf("0") }
         val padding = 6.dp
 
@@ -86,13 +92,13 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         //var contentPosition = player.contentPosition
 
         LaunchedEffect(Unit) {
-            while(true) {
+            while (true) {
                 contentPositionString = formatLength(totalSecs = player.contentPosition)
                 if (player.isPlaying) {
                     duration = formatLength(player.duration)
                 }
+                //save duration to state
                 delay(1000)
-
             }
         }
 
@@ -140,30 +146,30 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                 //Text(text = "Time: ")
                 Spacer(Modifier.size(padding))
                 Row {
-                Button(onClick = {
-                    Log.i("MHR", "IncreaseVol called")
-                    player.increaseDeviceVolume()
-                }) {
-                    Icon(
-                        contentDescription = stringResource(R.string.increateVolume),
-                        modifier = Modifier
-                            .size(24.dp)
-                            .wrapContentSize(align = Alignment.Center),
-                        painter = painterResource(R.drawable.audio_increase_level_sound_volume_icon)
-                    )
-                }
-                Button(onClick = {
-                    Log.i("MHR", "DecreaseVol called")
-                    player.decreaseDeviceVolume()
-                }) {
-                    Icon(
-                        contentDescription = stringResource(R.string.decreateVolume),
-                        modifier = Modifier
-                            .size(24.dp)
-                            .wrapContentSize(align = Alignment.Center),
-                        painter = painterResource(R.drawable.audio_decrease_level_sound_volume_icon)
-                    )
-                }
+                    Button(onClick = {
+                        Log.i("MHR", "IncreaseVol called")
+                        player.increaseDeviceVolume()
+                    }) {
+                        Icon(
+                            contentDescription = stringResource(R.string.increateVolume),
+                            modifier = Modifier
+                                .size(24.dp)
+                                .wrapContentSize(align = Alignment.Center),
+                            painter = painterResource(R.drawable.audio_increase_level_sound_volume_icon)
+                        )
+                    }
+                    Button(onClick = {
+                        Log.i("MHR", "DecreaseVol called")
+                        player.decreaseDeviceVolume()
+                    }) {
+                        Icon(
+                            contentDescription = stringResource(R.string.decreateVolume),
+                            modifier = Modifier
+                                .size(24.dp)
+                                .wrapContentSize(align = Alignment.Center),
+                            painter = painterResource(R.drawable.audio_decrease_level_sound_volume_icon)
+                        )
+                    }
                 }
             }
         }
@@ -189,7 +195,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 //        }
     //}
 
-    class PlayerEventLister(val eventHappened:(k: Int) -> Unit ) : Player.Listener {
+    class PlayerEventLister(val eventHappened: (k: Int) -> Unit) : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             (0 until events.size()).forEach {
                 Log.i("MHR", "onEvents called: $player Event: ${events.get(it)}")

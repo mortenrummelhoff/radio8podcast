@@ -36,6 +36,7 @@ import com.google.android.exoplayer2.offline.DownloadRequest
 import com.google.android.exoplayer2.offline.DownloadService
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.navigation.AUDIO_URL
+import dk.mhr.radio8podcast.presentation.navigation.DOWNLOAD_ID
 import dk.mhr.radio8podcast.presentation.navigation.Screen
 import dk.mhr.radio8podcast.presentation.navigation.TITLE
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
@@ -45,8 +46,6 @@ import dk.mhr.radio8podcast.service.PodcastService
 import kotlinx.coroutines.Dispatchers
 import java.net.URLDecoder
 import java.net.URLEncoder
-import java.nio.charset.Charset
-import java.util.Base64.Encoder
 
 
 var podcastService = PodcastService(Dispatchers.IO)
@@ -220,9 +219,10 @@ fun PodCastNavHost(
                 PodcastUtils.getDownloadTracker(context),
                 PodcastUtils.getDownloadManager(context).downloadIndex,
                 lifecycleOwner
-            ).SeeDownloadList(onPodCastListen = { audio, title ->
+            ).SeeDownloadList(onPodCastListen = { downloadId, audio, title ->
+                Log.i("MHR", "DownloadId: $downloadId")
                 navController.navigate(
-                    route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(title, "UTF8")
+                    route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(downloadId, "UTF8") + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(title, "UTF8")
                 ) { popUpTo(Screen.Landing.route) }
             }, onPodCastDelete = {download ->
                 Log.i("MHR", "Now delete download: ${download.download.request.id}")
@@ -230,11 +230,20 @@ fun PodCastNavHost(
             })
         }
         composable(
-            route = Screen.PodcastPlayer.route + "/{" + AUDIO_URL + "}/{" + TITLE + "}",
-            arguments = listOf(navArgument(AUDIO_URL) { NavType.StringType }, navArgument(TITLE) {NavType.StringType})
+            route = Screen.PodcastPlayer.route + "/{" + DOWNLOAD_ID + "}/{" + AUDIO_URL + "}/{" + TITLE + "}",
+            arguments = listOf(navArgument(DOWNLOAD_ID) { NavType.StringType }, navArgument(AUDIO_URL) { NavType.StringType }, navArgument(TITLE) {NavType.StringType})
 
         ) {
-            PodcastPlayerComposable(player).showPlayer(it.arguments?.getString(AUDIO_URL), URLDecoder.decode(it.arguments?.getString(TITLE),"UTF8") )
+            val download = PodcastUtils.getDownloadManager(context).downloadIndex.getDownload(
+                URLDecoder.decode(
+                    it.arguments?.getString(
+                        DOWNLOAD_ID
+                    ), "UTF8"
+                )
+            )
+
+            PodcastPlayerComposable(player).showPlayer(it.arguments?.getString(AUDIO_URL), URLDecoder.decode(it.arguments?.getString(TITLE),"UTF8"),
+                download )
         }
     }
 
