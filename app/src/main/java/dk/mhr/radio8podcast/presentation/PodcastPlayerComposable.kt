@@ -47,6 +47,8 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
             player.addListener(PlayerEventLister {
                 events
             })
+        } else {
+
         }
 
         Log.i("MHR", "CurrentMediaItemId" + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition)

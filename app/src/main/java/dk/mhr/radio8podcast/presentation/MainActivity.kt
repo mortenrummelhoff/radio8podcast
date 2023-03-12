@@ -76,6 +76,7 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
         setContent {
 
             val player = ExoPlayer.Builder(this).build()
+            player.experimentalSetOffloadSchedulingEnabled(true)
             val downloadIndex = PodcastUtils.getDownloadManager(this).downloadIndex
             //podcastViewModel.fetchDownloadList(downloadIndex)
 
@@ -223,6 +224,9 @@ fun PodCastNavHost(
                 navController.navigate(
                     route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(title, "UTF8")
                 ) { popUpTo(Screen.Landing.route) }
+            }, onPodCastDelete = {download ->
+                Log.i("MHR", "Now delete download: ${download.download.request.id}")
+                PodcastUtils.getDownloadManager(context).removeDownload(download.download.request.id)
             })
         }
         composable(

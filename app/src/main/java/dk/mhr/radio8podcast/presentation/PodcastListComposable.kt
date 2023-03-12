@@ -26,6 +26,7 @@ import kotlin.concurrent.timerTask
 class PodcastListComposable {
 
     var jsonArray: JSONArray = JSONArray()
+
     init {
         var lis = podcastViewModel.podcastList
         var jsonObject = JSONObject(lis)
@@ -73,15 +74,21 @@ class PodcastListComposable {
                             Text(text = "${record.get("title_original")}", maxLines = 2)
                         },
                     ) {
-                        Row {
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
                             Text(text = formatLength(totalSecs = "${record.get("audio_length_sec")}".toInt()))
                             Spacer(modifier = Modifier.size(6.dp))
 
-                            Button(onClick = {}, modifier = Modifier.size(24.dp).wrapContentSize(Alignment.Center)) {
+                            Button(
+                                onClick = {},
+                                modifier = Modifier.size(24.dp).wrapContentSize(Alignment.Center)
+                            ) {
                                 Icon(
                                     contentDescription = null,
                                     modifier = Modifier.size(20.dp),
-                                        //.wrapContentSize(align = Alignment.Center, ),
+                                    //.wrapContentSize(align = Alignment.Center, ),
                                     painter = painterResource(R.drawable.ic_download)
                                 )
                             }
