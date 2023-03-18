@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import androidx.wear.compose.material.*
 import androidx.wear.compose.material.dialog.Alert
@@ -120,13 +121,13 @@ class SeeDownloadListComposable(
                         ) {
 
                             if (download.startPosition != 0L) {
-                                Text(text = podcastViewModel.formatLength(download.startPosition))
+                                Text(fontSize = 12.sp, text = podcastViewModel.formatLength(download.startPosition))
                             } else {
-                                Text(text = formatState(download.download.state))
+                                Text(fontSize = 12.sp, text = formatState(download.download.state))
                             }
                             //Spacer(modifier = Modifier.size(6.dp))
-                            Text(
-                                text = "s: " + (download.download.bytesDownloaded / 1024 / 1024).toString() + "mb (" +
+                            Text(fontSize = 12.sp,
+                                text = " s: " + (download.download.bytesDownloaded / 1024 / 1024).toString() + "mb (" +
                                         download.download.percentDownloaded.roundToInt() + "%)"
                             )
                             //Spacer(modifier = Modifier.size(6.dp))
@@ -188,7 +189,7 @@ class SeeDownloadListComposable(
                     icon = {
                         Icon(
                             painter = painterResource(id = R.drawable.garbage),
-                            contentDescription = "airplane",
+                            contentDescription = "trashcan",
                             modifier = Modifier.size(24.dp)
                                 .wrapContentSize(align = Alignment.Center),
                         )
