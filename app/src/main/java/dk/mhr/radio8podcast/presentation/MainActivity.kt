@@ -20,15 +20,23 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
-import androidx.navigation.*
-import androidx.wear.compose.material.*
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import androidx.room.Room
+import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipDefaults
+import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.Text
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
@@ -36,19 +44,20 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.offline.DownloadRequest
 import com.google.android.exoplayer2.offline.DownloadService
 import dk.mhr.radio8podcast.R
+import dk.mhr.radio8podcast.data.AppDatabase
 import dk.mhr.radio8podcast.presentation.navigation.AUDIO_URL
 import dk.mhr.radio8podcast.presentation.navigation.DOWNLOAD_ID
 import dk.mhr.radio8podcast.presentation.navigation.Screen
 import dk.mhr.radio8podcast.presentation.navigation.TITLE
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import dk.mhr.radio8podcast.service.PodcastDownloadService
-import dk.mhr.radio8podcast.service.PodcastUtils
 import dk.mhr.radio8podcast.service.PodcastService
+import dk.mhr.radio8podcast.service.PodcastUtils
 import kotlinx.coroutines.Dispatchers
 import java.net.URLDecoder
 import java.net.URLEncoder
 
-
+var dbCalled = false
 var podcastService = PodcastService(Dispatchers.IO)
 var podcastViewModel = PodcastViewModel(podcastService);
 val DEBUG_LOG = "MHR";
@@ -74,6 +83,15 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
         super.onCreate(savedInstanceState)
 
         setContent {
+
+            if (!dbCalled) {
+                dbCalled = true;
+                val db = Room.databaseBuilder(
+                    applicationContext,
+                    AppDatabase::class.java, "podcast-download-metadata"
+                ).fallbackToDestructiveMigration().build()
+                podcastViewModel.podcastDao = db.podcastDao()
+            }
 
             val player = ExoPlayer.Builder(LocalContext.current).build()
             player.experimentalSetOffloadSchedulingEnabled(true)

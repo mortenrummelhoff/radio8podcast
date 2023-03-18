@@ -20,14 +20,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.wear.compose.material.*
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.offline.Download
 import dk.mhr.radio8podcast.R
+import dk.mhr.radio8podcast.data.PodcastEntity
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 
 class PodcastPlayerComposable(private val player: ExoPlayer) {
 
@@ -39,6 +41,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
+
     private fun startPlay(audio: String?, mediaItem: MediaItem?, events: () -> Unit) {
         Log.i("MHR", "Preparing player: " + audio.toString());
         Log.i(
@@ -46,28 +49,49 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
             "hasNextMediaItem: " + player.hasNextMediaItem() + ", hasPreviousMediaItem: " + player.hasPreviousMediaItem()
         )
 
-        if (player.mediaItemCount == 0) {
-            mediaItem?.let { player.setMediaItem(it) }
-            player.prepare()
-            Log.i("MHR", "Start play some podcast")
-        } else {
-            Log.i("MHR", "player already has media loaded: " + player.currentMediaItem?.mediaId)
-            if (mediaItem?.mediaId.equals(player.currentMediaItem?.mediaId)) {
-                Log.i("MHR", "Same mediaItem. Just continue playing")
-            } else {
-                Log.i("MHR", "new mediaItem selected. Load new into player")
-                mediaItem?.let { player.setMediaItem(it, /* set startposition from rememberSavable */) }
-                player.prepare()
-                Log.i("MHR", "Start play some podcast")
+        var startP = 0L
+
+        podcastViewModel.viewModelScope.launch {
+            mediaItem?.let {
+                withContext(Dispatchers.IO) {
+                    val podcastEntity = podcastViewModel.podcastDao.findByUrl(it.mediaId)
+                    Log.i("MHR", "Has database any data: $podcastEntity")
+
+                    if (podcastEntity == null) {
+                        Log.i("MHR", "No entry in db for mediaId: ${mediaItem.mediaId}")
+                        val newPodcastEntity = PodcastEntity(0, mediaItem.mediaId, 0)
+                        podcastViewModel.podcastDao.insertPodcast(newPodcastEntity)
+                    } else {
+                        startP = podcastEntity.startPosition!!
+                    }
+                }.let {
+                    if (player.mediaItemCount == 0) {
+                        mediaItem?.let { player.setMediaItem(it) }
+                        player.prepare()
+                        Log.i("MHR", "Start play some podcast")
+                    } else {
+                        Log.i("MHR", "player already has media loaded: " + player.currentMediaItem?.mediaId)
+                        if (mediaItem?.mediaId.equals(player.currentMediaItem?.mediaId)) {
+                            Log.i("MHR", "Same mediaItem. Just continue playing")
+                        } else {
+                            Log.i("MHR", "new mediaItem selected. Load new into player")
+                            mediaItem?.let { player.setMediaItem(it, startP) }
+                            player.prepare()
+                            Log.i("MHR", "Start play some podcast")
+                        }
+                    }
+
+                    Log.i(
+                        "MHR",
+                        "CurrentMediaItemId" + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition
+                    )
+
+                    player.play()
+                }
             }
         }
 
-        Log.i(
-            "MHR",
-            "CurrentMediaItemId" + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition
-        )
 
-        player.play()
         //player.setPlaybackSpeed(1.0f)
     }
 
@@ -113,6 +137,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                 delay(1000)
             }
         }
+
 
         Radio8podcastTheme {
             Column(

@@ -153,10 +153,10 @@ public final class PodcastUtils {
                             context,
                             getDatabaseProvider(context),
                             getDownloadCache(context),
-                            getHttpDataSourceFactory(context),
+                            getDataSourceFactory(context),
                             Executors.newFixedThreadPool(/* nThreads= */ 6));
             downloadTracker =
-                    new PodcastDownloadTracker(context, getHttpDataSourceFactory(context), downloadManager);
+                    new PodcastDownloadTracker(context, getDataSourceFactory(context), downloadManager);
         }
     }
 

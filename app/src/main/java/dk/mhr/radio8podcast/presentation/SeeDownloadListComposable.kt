@@ -2,10 +2,13 @@ package dk.mhr.radio8podcast.presentation
 
 import android.util.Log
 import androidx.compose.foundation.layout.*
+
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+
+
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -50,6 +53,12 @@ class SeeDownloadListComposable(
 
         val padding = 6.dp
         Radio8podcastTheme {
+            if (podcastViewModel.downloadList.isEmpty()) {
+                Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("No downloads available")
+                }
+
+            }
             LazyColumn() {
                 itemsIndexed(podcastViewModel.downloadList) { index, download ->
 

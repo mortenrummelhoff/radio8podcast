@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.exoplayer2.offline.Download
 import com.google.android.exoplayer2.offline.DownloadIndex
+import dk.mhr.radio8podcast.data.PodcastDao
 import dk.mhr.radio8podcast.service.PodcastService
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -19,12 +20,15 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         Log.i("MHR", "PodcastViewModel initialized")
     }
 
+    lateinit var podcastDao:PodcastDao
 
     val downloadList = mutableStateListOf<DataDownload>()
 
     var downloadChanged = MutableLiveData<String>()
     var podcasts = MutableLiveData<String>()
     var podcastList: String = String()
+
+
 
     fun fetchDownloadList(downloadIndex: DownloadIndex) {
         Log.i("MHR", "fetchingDownloadList" + downloadIndex.getDownloads().count);
