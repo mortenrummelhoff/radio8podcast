@@ -11,7 +11,9 @@ import com.google.android.exoplayer2.offline.Download
 import com.google.android.exoplayer2.offline.DownloadIndex
 import dk.mhr.radio8podcast.data.PodcastDao
 import dk.mhr.radio8podcast.service.PodcastService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 
 class PodcastViewModel(private val podcastService: PodcastService) : ViewModel() {
@@ -33,6 +35,8 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     fun fetchDownloadList(downloadIndex: DownloadIndex) {
         Log.i("MHR", "fetchingDownloadList" + downloadIndex.getDownloads().count);
         viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+
             downloadList.clear()
             //val terminalDownloads: MutableList<Download> = ArrayList()
             try {
@@ -44,8 +48,16 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
                                 Log.i("MHR", "index" + index + ", Download: " + cursor.download.bytesDownloaded);
                                 //terminalDownloads.add(cursor.download)
                                 //val dataDownload = DataDownload(cursor.download)
-                                downloadList.add(DataDownload(cursor.download))
-                                downloadList[index] = downloadList[index].copy(cursor.download)
+                                var startP: Long = 0
+                                podcastDao.findByUrl(cursor.download.request.id).let {
+                                    Log.i(DEBUG_LOG, "Found entry in database. StartPosition: " + it.startPosition)
+                                    startP = it.startPosition!!
+                                }
+
+                                downloadList.add(DataDownload(cursor.download, startP))
+                                downloadList[index] = downloadList[index].copy(cursor.download, startP)
+
+
                                 index++;
                             }
                     }
@@ -54,9 +66,9 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
             }
         }
         Log.i("MHR", "fetchingDownloadList done");
-    }
+    }}
 
-    data class DataDownload(var download: Download)
+    data class DataDownload(var download: Download, val startPosition: Long)
 
     fun loadPodcast(API_KEY: String): String {
 
