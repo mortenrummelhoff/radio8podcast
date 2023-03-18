@@ -41,13 +41,15 @@ class PodcastListComposable {
 
         val padding = 6.dp
         Radio8podcastTheme {
+
             Column(
                 modifier = Modifier
                     .captionBarPadding().fillMaxWidth().verticalScroll(ScrollState(0))
-                    .padding(padding)
+                    .padding(20.dp, 30.dp, 20.dp, 30.dp)
                     .background(MaterialTheme.colors.background),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+
 
             ) {
                 (0 until jsonArray.length()).forEach {

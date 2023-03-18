@@ -26,7 +26,6 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     val downloadList = mutableStateListOf<DataDownload>()
 
-    var downloadChanged = MutableLiveData<String>()
     var podcasts = MutableLiveData<String>()
     var podcastList: String = String()
 
@@ -35,7 +34,8 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         val minutes = (totalSecs / 1000 % 3600) / 60;
         val seconds = totalSecs / 1000 % 60;
 
-        return if (hours == 0L)
+        return if (hours == 0L && minutes == 0L)
+            String.format("%02d", seconds) else if (hours == 0L)
             String.format("%02d:%02d", minutes, seconds) else
             String.format("%2d:%02d:%02d", hours, minutes, seconds)
 
@@ -44,36 +44,40 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     fun fetchDownloadList(downloadIndex: DownloadIndex) {
         Log.i("MHR", "fetchingDownloadList" + downloadIndex.getDownloads().count);
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-
             downloadList.clear()
-            //val terminalDownloads: MutableList<Download> = ArrayList()
-            try {
-                downloadIndex.getDownloads()
-                    .use { cursor ->
-                            Log.i("MHR", "using cursor");
-                            var index = 0;
-                            while (cursor.moveToNext()) {
-                                Log.i("MHR", "index" + index + ", Download: " + cursor.download.bytesDownloaded);
-                                //terminalDownloads.add(cursor.download)
-                                //val dataDownload = DataDownload(cursor.download)
-                                var startP: Long = 0
-                                podcastDao.findByUrl(cursor.download.request.id).let {
-                                    Log.i(DEBUG_LOG, "Found entry in database. StartPosition: " + it.startPosition)
-                                    startP = it.startPosition!!
-                                }
+            downloadList.addAll(podcastService.fetchDownloadPodcastList(podcastDao, downloadIndex))
 
-                                downloadList.add(DataDownload(cursor.download, startP))
-                                downloadList[index] = downloadList[index].copy(cursor.download, startP)
 
-                                index++;
-                            }
-                    }
-            } catch (e: IOException) {
-                Log.e("MHR", "Failed to load downloads.", e)
-            }
-        }
-        Log.i("MHR", "fetchingDownloadList done");
+//            withContext(Dispatchers.IO) {
+//
+//            downloadList.clear()
+//            //val terminalDownloads: MutableList<Download> = ArrayList()
+//            try {
+//                downloadIndex.getDownloads()
+//                    .use { cursor ->
+//                            Log.i("MHR", "using cursor");
+//                            var index = 0;
+//                            while (cursor.moveToNext()) {
+//                                Log.i("MHR", "index" + index + ", Download: " + cursor.download.bytesDownloaded);
+//                                //terminalDownloads.add(cursor.download)
+//                                //val dataDownload = DataDownload(cursor.download)
+//                                var startP: Long = 0
+//                                podcastDao.findByUrl(cursor.download.request.id).let {
+//                                    Log.i(DEBUG_LOG, "Found entry in database. StartPosition: " + it.startPosition)
+//                                    startP = it.startPosition!!
+//                                }
+//
+//                                downloadList.add(DataDownload(cursor.download, startP))
+//                                downloadList[index] = downloadList[index].copy(cursor.download, startP)
+//
+//                                index++;
+//                            }
+//                    }
+//            } catch (e: IOException) {
+//                Log.e("MHR", "Failed to load downloads.", e)
+//            }
+//        }
+        Log.i(DEBUG_LOG, "fetchingDownloadList done");
     }}
 
     data class DataDownload(var download: Download, val startPosition: Long)
@@ -82,39 +86,9 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
         var pods = "initial value"
         viewModelScope.launch {
-
             pods = podcastService.fetchPodcasts(API_KEY)
-            //podcastService.fetchDetails(API_KEY, "1")
-            //Log.i("MHR", pods)
             podcasts.postValue(pods);
         }
         return pods
     }
-//        viewModelScope.launch {
-//            val result = withContext(Dispatchers.IO) {
-//                var listenNotesService = ListenNotesService()
-//                listenNotesService.main()
-//            }
-//        }
-//        Log.i("MHR", result.toString())
-
-//        val result = viewModelScope.async {
-//            // Coroutine that will be canceled when the ViewModel is cleared.
-//            println("Fetching from service")
-//
-//            var listenNotesService = ListenNotesService()
-//            val main = listenNotesService.main()
-//            Log.i("MHR", main.toString())
-//            main
-//        }
-//        result.invokeOnCompletion {
-//            if (it == null) {
-//                Log.i("MHR", "here are result:${result.getCompleted()}")
-//            } else {
-//                it.printStackTrace()
-//            }
-//        }
-
-
-//    }
 }

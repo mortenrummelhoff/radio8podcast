@@ -16,14 +16,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import androidx.room.Room
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.MaterialTheme
@@ -72,10 +65,9 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
         setContent {
             podcastViewModel.podcastDao = appDatabase.podcastDao()
 
-            //val player = ExoPlayer.Builder(LocalContext.current).build()
             exoPlayer.experimentalSetOffloadSchedulingEnabled(true)
+            exoPlayer.setPlaybackSpeed(1.0f)
             val downloadIndex = PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex
-            //podcastViewModel.fetchDownloadList(downloadIndex)
 
             PodcastUtils.getDownloadTracker(LocalContext.current).addListener {
                 podcastViewModel.fetchDownloadList(downloadIndex)
@@ -96,21 +88,6 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
         }
     }
 }
-
-
-@Composable
-fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit, onNavigateToSeeDownloadList: () -> Unit) {
-
-    // Log.i("MHR", "FetchPodcasts called. Show chip with button action")
-    val interactionSource = remember { MutableInteractionSource() }
-// Observe changes to the binary state for these interactions
-    val isDragged by interactionSource.collectIsDraggedAsState()
-    //val isPressed by interactionSource.collectIsPressedAsState()
-
-
-
-}
-
 
 @Composable
 fun PodCastNavHost(
@@ -179,8 +156,10 @@ fun PodCastNavHost(
                 ) { popUpTo(Screen.SeeDownloads.route) }
             }, onPodCastDelete = {download ->
                 Log.i("MHR", "Now delete download: ${download.download.request.id}")
+
+
                 PodcastUtils.getDownloadManager(context).removeDownload(download.download.request.id)
-            })
+            }, context)
         }
         composable(
             route = Screen.PodcastPlayer.route + "/{" + DOWNLOAD_ID + "}/{" + AUDIO_URL + "}/{" + TITLE + "}",

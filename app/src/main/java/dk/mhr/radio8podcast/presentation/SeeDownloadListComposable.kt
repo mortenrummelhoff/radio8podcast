@@ -1,23 +1,28 @@
 package dk.mhr.radio8podcast.presentation
 
+import android.content.Context
 import android.util.Log
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
-import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.Icon
-import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.TitleCard
-import com.google.android.exoplayer2.offline.Download
+import androidx.wear.compose.material.*
+import androidx.wear.compose.material.dialog.Alert
+import androidx.wear.compose.material.dialog.Dialog
 import com.google.android.exoplayer2.offline.Download.*
 import com.google.android.exoplayer2.offline.DownloadIndex
 import dk.mhr.radio8podcast.R
@@ -25,6 +30,7 @@ import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import dk.mhr.radio8podcast.service.PodcastDownloadTracker
 import dk.mhr.radio8podcast.service.PodcastDownloadTracker.Listener
 import java.nio.charset.Charset
+import kotlin.math.roundToInt
 
 class SeeDownloadListComposable(
     val downloadTracker: PodcastDownloadTracker,
@@ -47,18 +53,47 @@ class SeeDownloadListComposable(
     @Composable
     fun SeeDownloadList(
         onPodCastListen: (downloadId: String, audio: String, title: String) -> Unit,
-        onPodCastDelete: (download: PodcastViewModel.DataDownload) -> Unit
+        onPodCastDelete: (download: PodcastViewModel.DataDownload) -> Unit,
+        context: Context
     ) {
         Log.i("MHR", "SeeDownloadList called!")
 
+//        LaunchedEffect(Unit) {
+//            while (true) {
+//                podcastViewModel.fetchDownloadList(PodcastUtils.getDownloadManager(context).downloadIndex)
+//                delay(3000)
+//            }
+//        }
+
+        val showDialog = remember { mutableStateOf(false) }
+        lateinit var selectedDownload: PodcastViewModel.DataDownload
         val padding = 6.dp
         Radio8podcastTheme {
             if (podcastViewModel.downloadList.isEmpty()) {
-                Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    //Modifier.fillMaxSize().padding(20.dp, 30.dp, 20.dp, 30.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text("No downloads available")
                 }
             }
-            LazyColumn() {
+            if (showDialog.value) {
+                showConfirmDialog(
+                    selectedDownload, onPodCastDelete, showDialog.value
+                ) {
+                    Log.i(DEBUG_LOG, "onDismiss called!!!")
+                    showDialog.value = false
+                }
+            }
+
+            LazyColumn(modifier = Modifier
+            .captionBarPadding().fillMaxWidth()
+                .padding(10.dp, 30.dp, 10.dp, 30.dp)
+                .background(MaterialTheme.colors.background),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 itemsIndexed(podcastViewModel.downloadList) { index, download ->
 
                     Spacer(Modifier.size(padding))
@@ -90,10 +125,16 @@ class SeeDownloadListComposable(
                                 Text(text = formatState(download.download.state))
                             }
                             //Spacer(modifier = Modifier.size(6.dp))
-                            Text(text = "s: " + (download.download.bytesDownloaded / 1024 / 1024).toString() + "mb")
+                            Text(
+                                text = "s: " + (download.download.bytesDownloaded / 1024 / 1024).toString() + "mb (" +
+                                        download.download.percentDownloaded.roundToInt() + "%)"
+                            )
                             //Spacer(modifier = Modifier.size(6.dp))
                             Button(
-                                onClick = { onPodCastDelete(download) },
+                                onClick = {
+                                    selectedDownload = download
+                                    showDialog.value = true
+                                },
                                 modifier = Modifier.size(26.dp).wrapContentSize(Alignment.Center)
                             ) {
                                 Icon(
@@ -111,6 +152,82 @@ class SeeDownloadListComposable(
         }
     }
 
+
+    //@Composable@Composable
+    @Composable
+    fun showConfirmDialog(
+        selectedDownload: PodcastViewModel.DataDownload,
+        onPodCastDelete: (download: PodcastViewModel.DataDownload) -> Unit,
+        showDialog: Boolean,
+        onDismiss: () -> Unit
+    ) {
+        Box {
+//            //var showDialog by remember { mutableStateOf(false) }
+//            Column(
+//                modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
+//                verticalArrangement = Arrangement.Center,
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                Chip(
+//                    onClick = {onPodCastDelete(selectedDownload)},
+//                    label = { Text("Show dialog") },
+//                    colors = ChipDefaults.secondaryChipColors(),
+//                )
+//            }
+            val scrollState = rememberScalingLazyListState()
+            Dialog(
+                showDialog = showDialog,
+                onDismissRequest = onDismiss,
+                scrollState = scrollState,
+            ) {
+                Alert(
+                    scrollState = scrollState,
+                    verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
+                    contentPadding =
+                    PaddingValues(start = 10.dp, end = 10.dp, top = 24.dp, bottom = 52.dp),
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.garbage),
+                            contentDescription = "airplane",
+                            modifier = Modifier.size(24.dp)
+                                .wrapContentSize(align = Alignment.Center),
+                        )
+                    },
+                    title = {
+                        Text(
+                            text = selectedDownload.download.request.id,
+                            textAlign = TextAlign.Center
+                        )
+                    },
+                    message = {
+                        Text(
+                            text = "Confirm delete",
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.body2
+                        )
+                    },
+                ) {
+                    item {
+                        Chip(
+                            label = { Text("Ok") },
+                            onClick = {
+                                onPodCastDelete(selectedDownload)
+                                onDismiss()
+                            },
+                            colors = ChipDefaults.primaryChipColors(),
+                        )
+                    }
+                    item {
+                        Chip(
+                            label = { Text("Cancel") },
+                            onClick = { onDismiss() },
+                            colors = ChipDefaults.secondaryChipColors(),
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     class PodcastDownloadListener(onDownChanged: () -> Unit) : Listener {
         override fun onDownloadsChanged() {

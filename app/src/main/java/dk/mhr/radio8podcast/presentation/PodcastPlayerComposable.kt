@@ -31,19 +31,11 @@ import kotlinx.coroutines.withContext
 
 class PodcastPlayerComposable(private val player: ExoPlayer) {
 
-    fun formatLength(totalSecs: Long): String {
-        val hours = totalSecs / 1000 / 3600;
-        val minutes = (totalSecs / 1000 % 3600) / 60;
-        val seconds = totalSecs / 1000 % 60;
-
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
-    }
-
 
     private fun startPlay(audio: String?, mediaItem: MediaItem?, events: () -> Unit) {
-        Log.i("MHR", "Preparing player: " + audio.toString());
+        Log.i(DEBUG_LOG, "Preparing player: " + audio.toString());
         Log.i(
-            "MHR",
+            DEBUG_LOG,
             "hasNextMediaItem: " + player.hasNextMediaItem() + ", hasPreviousMediaItem: " + player.hasPreviousMediaItem()
         )
 
@@ -53,7 +45,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
             mediaItem?.let {
                 withContext(Dispatchers.IO) {
                     val podcastEntity = podcastViewModel.podcastDao.findByUrl(it.mediaId)
-                    Log.i("MHR", "Has database any data: $podcastEntity")
+                    Log.i(DEBUG_LOG, "Has database any data: $podcastEntity")
 
                     if (podcastEntity == null) {
                         Log.i(DEBUG_LOG, "No entry in db for mediaId: ${mediaItem.mediaId}")
@@ -68,7 +60,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                         player.prepare()
                         Log.i(DEBUG_LOG, "Start play some podcast")
                     } else {
-                        Log.i("MHR", "player already has media loaded: " + player.currentMediaItem?.mediaId)
+                        Log.i(DEBUG_LOG, "player already has media loaded: " + player.currentMediaItem?.mediaId)
                         if (mediaItem?.mediaId.equals(player.currentMediaItem?.mediaId)) {
                             Log.i(DEBUG_LOG, "Same mediaItem. Just continue playing")
                         } else {
@@ -80,7 +72,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                     }
 
                     Log.i(
-                        "MHR",
+                        DEBUG_LOG,
                         "CurrentMediaItemId" + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition
                     )
 
@@ -112,7 +104,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
     fun showPlayer(audio: String?, title: String?, download: Download?) {
 
         var checked by remember { mutableStateOf(true) }
-        Log.i("MHR", "What state remembered: $checked")
+        Log.i(DEBUG_LOG, "What state remembered: $checked")
 
         //var playedDownloadList by rememberSaveable { mutableListOf() }
         //var playedDownloadList by rememberSaveable { mutableStateListOf()}
@@ -121,8 +113,9 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         val mediaItem = download?.request?.toMediaItem()
 
         var contentPositionString by remember { mutableStateOf("") }
-        var duration by remember { mutableStateOf("0") }
+        var durationString by remember { mutableStateOf("") }
         val padding = 6.dp
+
 
         val (contentString) = when {
             checked -> stringResource(R.string.increateVolume) to stringResource(R.string.increateVolume)
@@ -138,9 +131,9 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 
         LaunchedEffect(Unit) {
             while (true) {
-                contentPositionString = formatLength(totalSecs = player.contentPosition)
+                contentPositionString = podcastViewModel.formatLength(totalSecs = player.contentPosition)
                 if (player.isPlaying) {
-                    duration = formatLength(player.duration)
+                    durationString = podcastViewModel.formatLength(player.duration)
                 }
                 //save duration to state
                 delay(1000)
@@ -164,7 +157,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                     {
                         checked = !checked
                         Log.i(
-                            "MHR",
+                            DEBUG_LOG,
                             "Checked: $checked" + ", hasNextMediaItem: " + player.hasNextMediaItem()
                         )
                         if (checked) {
@@ -188,12 +181,16 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                 }
                 Spacer(Modifier.size(padding))
                 Text(title.toString(), softWrap = true, maxLines = 2)
-                Text(contentPositionString + " : " + duration)
+                if (durationString.isEmpty()) {
+                    Text(contentPositionString)
+                } else {
+                    Text("$contentPositionString --$durationString")
+                }
                 //Text(text = "Time: ")
                 Spacer(Modifier.size(padding))
                 Row {
                     Button(onClick = {
-                        Log.i("MHR", "IncreaseVol called")
+                        Log.i(DEBUG_LOG, "IncreaseVol called")
                         player.increaseDeviceVolume()
                     }) {
                         Icon(
@@ -205,7 +202,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                         )
                     }
                     Button(onClick = {
-                        Log.i("MHR", "DecreaseVol called")
+                        Log.i(DEBUG_LOG, "DecreaseVol called")
                         player.decreaseDeviceVolume()
                     }) {
                         Icon(
