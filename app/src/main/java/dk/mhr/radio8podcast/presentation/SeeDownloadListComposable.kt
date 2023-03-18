@@ -57,7 +57,6 @@ class SeeDownloadListComposable(
                 Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("No downloads available")
                 }
-
             }
             LazyColumn() {
                 itemsIndexed(podcastViewModel.downloadList) { index, download ->

@@ -1,27 +1,22 @@
 package dk.mhr.radio8podcast.presentation
 
+
 import android.util.Log
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-
-
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
-import androidx.wear.compose.material.*
+import androidx.wear.compose.material.Button
+import androidx.wear.compose.material.Icon
+import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.Text
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -29,7 +24,10 @@ import com.google.android.exoplayer2.offline.Download
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.data.PodcastEntity
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PodcastPlayerComposable(private val player: ExoPlayer) {
 
@@ -58,7 +56,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                     Log.i("MHR", "Has database any data: $podcastEntity")
 
                     if (podcastEntity == null) {
-                        Log.i("MHR", "No entry in db for mediaId: ${mediaItem.mediaId}")
+                        Log.i(DEBUG_LOG, "No entry in db for mediaId: ${mediaItem.mediaId}")
                         val newPodcastEntity = PodcastEntity(0, mediaItem.mediaId, 0)
                         podcastViewModel.podcastDao.insertPodcast(newPodcastEntity)
                     } else {
@@ -66,18 +64,18 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                     }
                 }.let {
                     if (player.mediaItemCount == 0) {
-                        mediaItem?.let { player.setMediaItem(it) }
+                        mediaItem?.let { player.setMediaItem(it, startP) }
                         player.prepare()
-                        Log.i("MHR", "Start play some podcast")
+                        Log.i(DEBUG_LOG, "Start play some podcast")
                     } else {
                         Log.i("MHR", "player already has media loaded: " + player.currentMediaItem?.mediaId)
                         if (mediaItem?.mediaId.equals(player.currentMediaItem?.mediaId)) {
-                            Log.i("MHR", "Same mediaItem. Just continue playing")
+                            Log.i(DEBUG_LOG, "Same mediaItem. Just continue playing")
                         } else {
-                            Log.i("MHR", "new mediaItem selected. Load new into player")
+                            Log.i(DEBUG_LOG, "new mediaItem selected. Load new into player")
                             mediaItem?.let { player.setMediaItem(it, startP) }
                             player.prepare()
-                            Log.i("MHR", "Start play some podcast")
+                            Log.i(DEBUG_LOG, "Start play some podcast")
                         }
                     }
 
@@ -97,6 +95,17 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 
     private fun stopPlay() {
         player.pause()
+        val currentPosition:Long = player.currentPosition
+        val currentMediaItem = player.currentMediaItem ?: return
+        podcastViewModel.viewModelScope.launch {
+            withContext(Dispatchers.IO){
+                val podcastEntity = podcastViewModel.podcastDao.findByUrl(currentMediaItem.mediaId)
+                if (podcastEntity != null) {
+                    val updatedPodcastEntity = podcastEntity.copy(podcastEntity.uid, podcastEntity.url, currentPosition)
+                    podcastViewModel.podcastDao.updatePodcast(updatedPodcastEntity)
+                }
+            }
+        }
     }
 
     @Composable

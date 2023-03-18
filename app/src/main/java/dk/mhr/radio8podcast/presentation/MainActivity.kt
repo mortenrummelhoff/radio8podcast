@@ -57,44 +57,23 @@ import kotlinx.coroutines.Dispatchers
 import java.net.URLDecoder
 import java.net.URLEncoder
 
-var dbCalled = false
 var podcastService = PodcastService(Dispatchers.IO)
 var podcastViewModel = PodcastViewModel(podcastService);
 val DEBUG_LOG = "MHR";
 
-
-
 class MainActivity : ComponentActivity(), LifecycleOwner {
 
-    //var listenEvent: () -> Unit
-    //var player:ExoPlayer
-
-//    init{
-//        val player = ExoPlayer.Builder(this).build()
-//        val downloadIndex = PodcastUtils.getDownloadManager(this).downloadIndex
-//        podcastViewModel.fetchDownloadList(downloadIndex)
-//
-//        PodcastUtils.getDownloadTracker(this).addListener {
-//            podcastViewModel.fetchDownloadList(downloadIndex)
-//        }
-//    }
+    private val appDatabase by lazy { AppDatabase.getDatabase(this) }
+    private val exoPlayer by lazy { ExoPlayer.Builder(this).build() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
+            podcastViewModel.podcastDao = appDatabase.podcastDao()
 
-            if (!dbCalled) {
-                dbCalled = true;
-                val db = Room.databaseBuilder(
-                    applicationContext,
-                    AppDatabase::class.java, "podcast-download-metadata"
-                ).fallbackToDestructiveMigration().build()
-                podcastViewModel.podcastDao = db.podcastDao()
-            }
-
-            val player = ExoPlayer.Builder(LocalContext.current).build()
-            player.experimentalSetOffloadSchedulingEnabled(true)
+            //val player = ExoPlayer.Builder(LocalContext.current).build()
+            exoPlayer.experimentalSetOffloadSchedulingEnabled(true)
             val downloadIndex = PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex
             //podcastViewModel.fetchDownloadList(downloadIndex)
 
@@ -112,8 +91,8 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
             //}
 
 
-            Log.i(DEBUG_LOG, "Oncreate called we have player: $player")
-            PodCastNavHost("WearApp", this, this, player)
+            Log.i(DEBUG_LOG, "Oncreate called we have player: $exoPlayer")
+            PodCastNavHost("WearApp", this, this, exoPlayer)
         }
     }
 }
@@ -190,7 +169,6 @@ fun PodCastNavHost(
     val API_KEY = stringResource(R.string.api_key)
 
 
-
     SwipeDismissableNavHost(
         //modifier = modifier,
         navController = navController,
@@ -198,13 +176,13 @@ fun PodCastNavHost(
     ) {
         composable(Screen.Landing.route) {
             WearApp(onNavigateToFetchPodcast = {
-                Log.i("MHR", "Calling navigate to ShowPodcasts")
+                Log.i(DEBUG_LOG, "Calling navigate to ShowPodcasts")
                 podcastViewModel.loadPodcast(API_KEY)
 
                 if (!podcastViewModel.podcasts.hasObservers()) {
                     podcastViewModel.podcasts.observe(lifecycleOwner) { t ->
                         podcastViewModel.podcastList = t
-                        Log.i("MHR", "Observe called...")
+                        Log.i(DEBUG_LOG, "Observe called...")
                         navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
                     }
                 }
@@ -217,7 +195,7 @@ fun PodCastNavHost(
         composable(Screen.ShowPodcast.route) {
             //Log.i(DEBUG_LOG, "backStackEntry: ${it.destination}")
             PodcastListComposable().ShowPodcastList(onPodCastDownload = { title, link, audio ->
-                Log.i("MHR", "Download Podcast clicked!: $title, Link: $link, audio: $audio")
+                Log.i(DEBUG_LOG, "Download Podcast clicked!: $title, Link: $link, audio: $audio")
 
                 val downloadRequest: DownloadRequest =
                     DownloadRequest.Builder(title, Uri.parse(audio)).setData(
