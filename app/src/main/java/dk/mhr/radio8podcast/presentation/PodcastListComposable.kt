@@ -33,14 +33,6 @@ class PodcastListComposable {
         jsonArray = jsonObject.getJSONArray("results")
     }
 
-    fun formatLength(totalSecs: Int): String {
-        val hours = totalSecs / 3600;
-        val minutes = (totalSecs % 3600) / 60;
-        val seconds = totalSecs % 60;
-
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
-    }
-
     @Composable
     fun ShowPodcastList(
         onPodCastDownload: (title: String, link: String, audio: String) -> Unit,
@@ -78,7 +70,7 @@ class PodcastListComposable {
                             modifier = Modifier.fillMaxSize(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(text = formatLength(totalSecs = "${record.get("audio_length_sec")}".toInt()))
+                            Text(text = podcastViewModel.formatLength(totalSecs = "${record.get("audio_length_sec")}".toLong()*1000))
                             Spacer(modifier = Modifier.size(6.dp))
 
                             Button(

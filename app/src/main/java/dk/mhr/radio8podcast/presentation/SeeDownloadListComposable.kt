@@ -85,12 +85,12 @@ class SeeDownloadListComposable(
                         ) {
 
                             if (download.startPosition != 0L) {
-                                Text(text = download.startPosition.toString())
+                                Text(text = podcastViewModel.formatLength(download.startPosition))
                             } else {
                                 Text(text = formatState(download.download.state))
                             }
                             //Spacer(modifier = Modifier.size(6.dp))
-                            Text(text = "size: " + (download.download.bytesDownloaded / 1024 / 1024).toString() + "m")
+                            Text(text = "s: " + (download.download.bytesDownloaded / 1024 / 1024).toString() + "mb")
                             //Spacer(modifier = Modifier.size(6.dp))
                             Button(
                                 onClick = { onPodCastDelete(download) },

@@ -30,7 +30,16 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     var podcasts = MutableLiveData<String>()
     var podcastList: String = String()
 
+    fun formatLength(totalSecs: Long): String {
+        val hours = totalSecs / 1000 / 3600;
+        val minutes = (totalSecs / 1000 % 3600) / 60;
+        val seconds = totalSecs / 1000 % 60;
 
+        return if (hours == 0L)
+            String.format("%02d:%02d", minutes, seconds) else
+            String.format("%2d:%02d:%02d", hours, minutes, seconds)
+
+    }
 
     fun fetchDownloadList(downloadIndex: DownloadIndex) {
         Log.i("MHR", "fetchingDownloadList" + downloadIndex.getDownloads().count);
@@ -56,7 +65,6 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
                                 downloadList.add(DataDownload(cursor.download, startP))
                                 downloadList[index] = downloadList[index].copy(cursor.download, startP)
-
 
                                 index++;
                             }

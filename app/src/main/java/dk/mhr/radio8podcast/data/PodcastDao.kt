@@ -16,4 +16,7 @@ interface PodcastDao {
 
     @Update
     fun updatePodcast(podcastEntity: PodcastEntity)
+
+    @Delete
+    fun deletePodcast(podcastEntity: PodcastEntity)
 }

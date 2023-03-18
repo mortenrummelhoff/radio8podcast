@@ -108,50 +108,6 @@ fun FetchPodcasts(onNavigateToShowPodcasts: () -> Unit, onNavigateToSeeDownloadL
     //val isPressed by interactionSource.collectIsPressedAsState()
 
 
-    val asState: State<Boolean> = interactionSource.collectIsPressedAsState()
-
-
-//    podcasts.observe(this, Observer {
-//
-//    })
-//    val (text) = when {
-//        isPressed -> "fetch podcast" to "load"
-//        else ->  podcastService.podcasts.value.orEmpty() to  podcastService.podcasts.value.orEmpty()
-//    }
-
-//    val ds = when {
-//        interactionSource.collectIsPressedAsState().let { true } -> "sdfd"
-//        else -> podcastService.podcasts.value.orEmpty()
-//    }
-//    val (text) = when {
-//        isPressed -> {
-//            val pair: Pair<String, String> = "fetch podcast" to "fetch podcast"
-//            pair
-//        }
-//        else -> podcastService.podcasts.value.orEmpty() to podcastService.podcasts.value.orEmpty()
-//    }
-
-
-//    val (text) = when {
-//        isPressed -> {
-//            val pair: Pair<String, String> = "fetch podcast" to "fetch podcast"
-//            pair
-//        }
-//        else -> podcastService.podcasts.value.orEmpty() to  podcastService.podcasts.value.orEmpty()
-//    }
-
-// Use the state to change our UI
-//    val (text, color) = when {
-//        isPressed -> prut to Color.DarkGray
-//        else -> "" to Color.Black
-//    }
-
-    //val (text, tex) = ""
-//    val (text) = when {
-//        interactionSource.collectIsPressedAsState() -> "23"
-//        else -> "sdf"
-//    }
-
 
 }
 
