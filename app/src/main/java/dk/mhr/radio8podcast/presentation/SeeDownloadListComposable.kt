@@ -24,12 +24,16 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.wear.compose.material.*
 import androidx.wear.compose.material.dialog.Alert
 import androidx.wear.compose.material.dialog.Dialog
+import com.google.android.exoplayer2.offline.Download
 import com.google.android.exoplayer2.offline.Download.*
 import com.google.android.exoplayer2.offline.DownloadIndex
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import dk.mhr.radio8podcast.service.PodcastDownloadTracker
 import dk.mhr.radio8podcast.service.PodcastDownloadTracker.Listener
+import dk.mhr.radio8podcast.service.PodcastUtils
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.asFlow
 import java.nio.charset.Charset
 import kotlin.math.roundToInt
 
@@ -59,12 +63,48 @@ class SeeDownloadListComposable(
     ) {
         Log.i("MHR", "SeeDownloadList called!")
 
-//        LaunchedEffect(Unit) {
-//            while (true) {
-//                podcastViewModel.fetchDownloadList(PodcastUtils.getDownloadManager(context).downloadIndex)
-//                delay(3000)
-//            }
-//        }
+
+
+        LaunchedEffect(Unit) {
+
+            while (true) {
+                val ongoingDownloads = PodcastUtils.getDownloadManager(context).currentDownloads
+                if (ongoingDownloads.isEmpty()) break
+
+                Log.i(DEBUG_LOG, "We have ongoing downloads. UI must be updated!!")
+                for (item in ongoingDownloads) {
+                    Log.i(DEBUG_LOG, "Iterate through ongoingDownloads: " + item + " -> download pct: " + item.percentDownloaded)
+                    podcastViewModel.downloadList.find {
+                        Log.i(DEBUG_LOG, "find in downloadList: " + it)
+                        it.download.value.request.id == item.request.id
+                    }.let {it2 ->
+                        Log.i(DEBUG_LOG, "Download found in list: " + it2)
+
+                        if (it2 != null) {
+                            val dIndex = podcastViewModel.downloadList.indexOf(it2)
+                            if (dIndex > -1) {
+                                Log.i(DEBUG_LOG, "Found index in list: " + dIndex)
+                                //podcastViewModel.downloadList[dIndex] = PodcastViewModel.DataDownload(item, it2.startPosition)
+                                podcastViewModel.downloadList[dIndex] =
+                                    podcastViewModel.downloadList[dIndex].copy(
+                                        download = mutableStateOf(item),
+                                        startPosition = it2.startPosition
+                                    )
+                                //podcastViewModel.downloadList[dIndex].download = item
+                                //podcastViewModel.downloadList
+                                Log.i(
+                                    DEBUG_LOG,
+                                    "download in downloadList: " + dIndex + " updated. New pct: " +
+                                            podcastViewModel.downloadList[dIndex].download.value.percentDownloaded
+                                )
+                            }
+                        }
+                    }
+                }
+                delay(2000)
+            }
+            Log.i(DEBUG_LOG, "Ongoing downloads finished.")
+        }
 
         val showDialog = remember { mutableStateOf(false) }
         lateinit var selectedDownload: PodcastViewModel.DataDownload
@@ -72,7 +112,7 @@ class SeeDownloadListComposable(
         Radio8podcastTheme {
             if (podcastViewModel.downloadList.isEmpty()) {
                 Column(
-                    //Modifier.fillMaxSize().padding(20.dp, 30.dp, 20.dp, 30.dp),
+                    Modifier.fillMaxSize().padding(20.dp, 30.dp, 20.dp, 30.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -90,10 +130,11 @@ class SeeDownloadListComposable(
 
             LazyColumn(modifier = Modifier
             .captionBarPadding().fillMaxWidth()
-                .padding(10.dp, 30.dp, 10.dp, 30.dp)
+//                .padding(10.dp, 30.dp, 10.dp, 30.dp)
                 .background(MaterialTheme.colors.background),
                 verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 itemsIndexed(podcastViewModel.downloadList) { index, download ->
 
@@ -102,14 +143,14 @@ class SeeDownloadListComposable(
                     TitleCard(
                         onClick = {
                             onPodCastListen(
-                                download.download.request.id,
-                                download.download.request.uri.toString(),
-                                download.download.request.data.toString(Charset.defaultCharset())
+                                download.download.value.request.id,
+                                download.download.value.request.uri.toString(),
+                                download.download.value.request.data.toString(Charset.defaultCharset())
                             )
                         },
                         title = {
                             Text(
-                                text = download.download.request.data.toString(Charset.defaultCharset()),
+                                text = download.download.value.request.data.toString(Charset.defaultCharset()),
                                 maxLines = 2
                             )
                         },
@@ -123,12 +164,12 @@ class SeeDownloadListComposable(
                             if (download.startPosition != 0L) {
                                 Text(fontSize = 12.sp, text = podcastViewModel.formatLength(download.startPosition))
                             } else {
-                                Text(fontSize = 12.sp, text = formatState(download.download.state))
+                                Text(fontSize = 12.sp, text = formatState(download.download.value.state))
                             }
                             //Spacer(modifier = Modifier.size(6.dp))
                             Text(fontSize = 12.sp,
-                                text = " s: " + (download.download.bytesDownloaded / 1024 / 1024).toString() + "mb (" +
-                                        download.download.percentDownloaded.roundToInt() + "%)"
+                                text = " s: " + (download.download.value.bytesDownloaded / 1024 / 1024).toString() + "mb (" +
+                                        download.download.value.percentDownloaded.roundToInt() + "%)"
                             )
                             //Spacer(modifier = Modifier.size(6.dp))
                             Button(
@@ -196,7 +237,7 @@ class SeeDownloadListComposable(
                     },
                     title = {
                         Text(
-                            text = selectedDownload.download.request.id,
+                            text = selectedDownload.download.value.request.id,
                             textAlign = TextAlign.Center
                         )
                     },

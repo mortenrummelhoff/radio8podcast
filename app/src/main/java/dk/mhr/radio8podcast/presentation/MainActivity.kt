@@ -155,10 +155,10 @@ fun PodCastNavHost(
                     route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(downloadId, "UTF8") + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(title, "UTF8")
                 ) { popUpTo(Screen.SeeDownloads.route) }
             }, onPodCastDelete = {download ->
-                Log.i("MHR", "Now delete download: ${download.download.request.id}")
+                Log.i("MHR", "Now delete download: ${download.download.value.request.id}")
 
 
-                PodcastUtils.getDownloadManager(context).removeDownload(download.download.request.id)
+                PodcastUtils.getDownloadManager(context).removeDownload(download.download.value.request.id)
             }, context)
         }
         composable(

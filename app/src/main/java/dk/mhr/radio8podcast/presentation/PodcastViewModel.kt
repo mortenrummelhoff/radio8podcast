@@ -1,7 +1,9 @@
 package dk.mhr.radio8podcast.presentation
 
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.MutableLiveData
@@ -80,7 +82,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         Log.i(DEBUG_LOG, "fetchingDownloadList done");
     }}
 
-    data class DataDownload(var download: Download, val startPosition: Long)
+    data class DataDownload(val download: MutableState<Download>, val startPosition: Long)
 
     fun loadPodcast(API_KEY: String): String {
 

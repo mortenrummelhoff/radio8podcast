@@ -1,6 +1,7 @@
 package dk.mhr.radio8podcast.service
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import com.google.android.exoplayer2.offline.DownloadIndex
 import dk.mhr.radio8podcast.data.PodcastDao
 import dk.mhr.radio8podcast.presentation.DEBUG_LOG
@@ -47,8 +48,8 @@ class PodcastService(private val ioDispatcher: CoroutineDispatcher) {
                                 }
                             }
 
-                            downloadList.add(PodcastViewModel.DataDownload(cursor.download, startP))
-                            downloadList[index] = downloadList[index].copy(cursor.download, startP)
+                            downloadList.add(PodcastViewModel.DataDownload(mutableStateOf( cursor.download), startP))
+                            downloadList[index] = downloadList[index].copy(mutableStateOf( cursor.download), startP)
 
                             index++;
                         }
