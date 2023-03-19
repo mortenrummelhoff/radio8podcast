@@ -36,6 +36,7 @@ import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.offline.DownloadRequest
 import com.google.android.exoplayer2.offline.DownloadService
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.data.AppDatabase
 import dk.mhr.radio8podcast.presentation.navigation.AUDIO_URL
@@ -57,7 +58,8 @@ val DEBUG_LOG = "MHR";
 class MainActivity : ComponentActivity(), LifecycleOwner {
 
     private val appDatabase by lazy { AppDatabase.getDatabase(this) }
-    private val exoPlayer by lazy { ExoPlayer.Builder(this).build() }
+    private val exoPlayer by lazy { ExoPlayer.Builder(this).setMediaSourceFactory(
+        DefaultMediaSourceFactory(this).setDataSourceFactory(PodcastUtils.getDataSourceFactory(this))).build() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

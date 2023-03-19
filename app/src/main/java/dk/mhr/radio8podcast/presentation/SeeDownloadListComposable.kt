@@ -168,7 +168,7 @@ class SeeDownloadListComposable(
                             }
                             //Spacer(modifier = Modifier.size(6.dp))
                             Text(fontSize = 12.sp,
-                                text = " s: " + (download.download.value.bytesDownloaded / 1024 / 1024).toString() + "mb (" +
+                                text = " " + (download.download.value.bytesDownloaded / 1024 / 1024).toString() + "mb (" +
                                         download.download.value.percentDownloaded.roundToInt() + "%)"
                             )
                             //Spacer(modifier = Modifier.size(6.dp))
