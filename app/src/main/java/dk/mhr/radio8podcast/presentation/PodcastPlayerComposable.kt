@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.marginRight
 import androidx.lifecycle.viewModelScope
@@ -28,6 +29,7 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.Player.EVENT_IS_PLAYING_CHANGED
 import com.google.android.exoplayer2.Player.Listener
 import com.google.android.exoplayer2.offline.Download
+import com.google.android.exoplayer2.ui.StyledPlayerView.SHOW_BUFFERING_NEVER
 import com.google.android.exoplayer2.ui.StyledPlayerControlView
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import dk.mhr.radio8podcast.R
@@ -110,13 +112,27 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
     }
 
     @Composable
-    fun showPlayer(audio: String?, title: String?, download: Download?) {
+    fun showPlayer2(audio: String?, title: String?, download: Download?) {
         val playerView = StyledPlayerView(LocalContext.current)
         playerView.player = player
-        //playerView.showContextMenu()
+        playerView.clearAnimation()
+        playerView.useArtwork = false
+        playerView.setShowRewindButton(false)
+        playerView.setShowFastForwardButton(false)
+        playerView.setShowMultiWindowTimeBar(false)
+        playerView.setShowVrButton(false)
+        playerView.setShowNextButton(false)
+        playerView.setShowPreviousButton(false)
+        playerView.setShowBuffering(SHOW_BUFFERING_NEVER)
+        //playerView.setShow
+        //playerView.
+                //playerView.showContextMenu()
         //playerView.show
         //playerView.offsetTopAndBottom(50)
-        playerView.setPadding(30, 0, 30, 20)
+        playerView.setShowMultiWindowTimeBar(false)
+
+        //playerView.contentDescription = "mhrasdf"
+        playerView.setPadding(15, 0, 10, 30)
 
 
             player.addListener(PlayerEventLister(eventHappened = {
@@ -145,7 +161,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 
 
     @Composable
-    fun showPlayer2(audio: String?, title: String?, download: Download?) {
+    fun showPlayer(audio: String?, title: String?, download: Download?) {
 
         var checked by remember { mutableStateOf(true) }
         Log.i(DEBUG_LOG, "What state remembered: $checked")
@@ -155,7 +171,9 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 
         //val mediaItem: MediaItem = MediaItem.fromUri(audio.toString())
         val mediaItem = download?.request?.toMediaItem()
+        startPlay(audio, mediaItem, events = {
 
+        })
         var contentPositionString by remember { mutableStateOf("") }
         var durationString by remember { mutableStateOf("") }
         val padding = 6.dp
@@ -205,11 +223,11 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                             "Checked: $checked" + ", hasNextMediaItem: " + player.hasNextMediaItem()
                         )
                         if (checked) {
-                            startPlay(audio, mediaItem, events = {
+                            player.play()
 
-                            })
                         } else {
-                            stopPlay()
+                            player.pause()
+//                            stopPlay()
                         }
 
                     },
@@ -224,27 +242,32 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                     )
                 }
                 Spacer(Modifier.size(padding))
-                Text(title.toString(), softWrap = true, maxLines = 2)
+                Text(text = title!!, softWrap = true, maxLines = 2, fontSize = 12.sp)
                 if (durationString.isEmpty()) {
                     Text(contentPositionString)
                 } else {
                     Text("$contentPositionString --$durationString")
                 }
                 //Text(text = "Time: ")
-                Spacer(Modifier.size(padding))
+
+                Spacer(Modifier.size(2.dp))
                 Row {
                     Button(onClick = {
-                        Log.i(DEBUG_LOG, "IncreaseVol called")
-                        player.increaseDeviceVolume()
+                        Log.i(DEBUG_LOG, "-15s")
+                        player.seekTo(player.currentPosition-15000)
                     }) {
-                        Icon(
-                            contentDescription = stringResource(R.string.increateVolume),
-                            modifier = Modifier
-                                .size(24.dp)
-                                .wrapContentSize(align = Alignment.Center),
-                            painter = painterResource(R.drawable.audio_increase_level_sound_volume_icon)
-                        )
+                        Text("-15s")
                     }
+                    Spacer(Modifier.padding(30.dp, 4.dp, 30.dp, 4.dp))
+                    Button(onClick = {
+                        Log.i(DEBUG_LOG, "+15s")
+                        player.seekTo(player.currentPosition+15000)
+                    }) {
+                        Text("+15s")
+                    }
+                }
+                //Spacer(Modifier.size(padding))
+                Row {
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "DecreaseVol called")
                         player.decreaseDeviceVolume()
@@ -255,6 +278,19 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                                 .size(24.dp)
                                 .wrapContentSize(align = Alignment.Center),
                             painter = painterResource(R.drawable.audio_decrease_level_sound_volume_icon)
+                        )
+                    }
+                    Spacer(Modifier.padding(4.dp, 0.dp, 0.dp, 4.dp))
+                    Button(onClick = {
+                        Log.i(DEBUG_LOG, "IncreaseVol called")
+                        player.increaseDeviceVolume()
+                    }) {
+                        Icon(
+                            contentDescription = stringResource(R.string.increateVolume),
+                            modifier = Modifier
+                                .size(24.dp)
+                                .wrapContentSize(align = Alignment.Center),
+                            painter = painterResource(R.drawable.audio_increase_level_sound_volume_icon)
                         )
                     }
                 }
