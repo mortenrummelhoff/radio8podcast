@@ -2,6 +2,8 @@ package dk.mhr.radio8podcast.presentation
 
 
 import android.util.Log
+import android.view.RoundedCorner
+import android.view.TextureView
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,9 +11,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.marginRight
 import androidx.lifecycle.viewModelScope
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Icon
@@ -20,7 +25,11 @@ import androidx.wear.compose.material.Text
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.Player.EVENT_IS_PLAYING_CHANGED
+import com.google.android.exoplayer2.Player.Listener
 import com.google.android.exoplayer2.offline.Download
+import com.google.android.exoplayer2.ui.StyledPlayerControlView
+import com.google.android.exoplayer2.ui.StyledPlayerView
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.data.PodcastEntity
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
@@ -76,7 +85,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                         "CurrentMediaItemId" + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition
                     )
 
-                    player.play()
+                    //player.play()
                 }
             }
         }
@@ -86,7 +95,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
     }
 
     private fun stopPlay() {
-        player.pause()
+        //player.pause()
         val currentPosition:Long = player.currentPosition
         val currentMediaItem = player.currentMediaItem ?: return
         podcastViewModel.viewModelScope.launch {
@@ -102,6 +111,41 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 
     @Composable
     fun showPlayer(audio: String?, title: String?, download: Download?) {
+        val playerView = StyledPlayerView(LocalContext.current)
+        playerView.player = player
+        //playerView.showContextMenu()
+        //playerView.show
+        //playerView.offsetTopAndBottom(50)
+        playerView.setPadding(30, 0, 30, 20)
+
+
+            player.addListener(PlayerEventLister(eventHappened = {
+                Log.i(DEBUG_LOG, "What happened: $it")
+                if (EVENT_IS_PLAYING_CHANGED == it) {
+                    stopPlay()
+                }
+            }))
+
+        val mediaItem = download?.request?.toMediaItem()
+        startPlay(audio, mediaItem, {})
+//        player.setMediaItem(mediaItem!!)
+//        player.prepare()
+
+
+        //Box(modifier = Modifier.fillMaxSize()) {
+            AndroidView(
+
+                factory = {
+                    playerView
+                })
+        //}
+
+    }
+
+
+
+    @Composable
+    fun showPlayer2(audio: String?, title: String?, download: Download?) {
 
         var checked by remember { mutableStateOf(true) }
         Log.i(DEBUG_LOG, "What state remembered: $checked")
@@ -219,11 +263,13 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
     }
 
 
-    class PlayerEventLister(val eventHappened: (k: Int) -> Unit) : Player.Listener {
+    class PlayerEventLister(val eventHappened: (k: Int) -> Unit) : Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             (0 until events.size()).forEach {
                 Log.i("MHR", "onEvents called: $player Event: ${events.get(it)}")
                 eventHappened(events.get(it))
+
+
             }
         }
     }

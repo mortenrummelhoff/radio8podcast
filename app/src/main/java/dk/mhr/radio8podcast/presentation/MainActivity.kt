@@ -37,6 +37,8 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.offline.DownloadRequest
 import com.google.android.exoplayer2.offline.DownloadService
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
+import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.ui.StyledPlayerView
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.data.AppDatabase
 import dk.mhr.radio8podcast.presentation.navigation.AUDIO_URL
@@ -64,6 +66,8 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
+
         setContent {
             podcastViewModel.podcastDao = appDatabase.podcastDao()
 
@@ -83,7 +87,6 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
                 //Log.i("MHR", "onDownloadsChanged called. UI update")
                 //podcastViewModel.downloadChanged.postValue("UPDATE_UI")
             //}
-
 
             Log.i(DEBUG_LOG, "Oncreate called we have player: $exoPlayer")
             PodCastNavHost("WearApp", this, this, exoPlayer)
