@@ -141,6 +141,7 @@ class SeeDownloadListComposable(
                     Spacer(Modifier.size(padding))
 
                     TitleCard(
+
                         onClick = {
                             onPodCastListen(
                                 download.download.value.request.id,
@@ -149,7 +150,7 @@ class SeeDownloadListComposable(
                             )
                         },
                         title = {
-                            Text(
+                            Text(fontSize = 12.sp,
                                 text = download.download.value.request.data.toString(Charset.defaultCharset()),
                                 maxLines = 2
                             )

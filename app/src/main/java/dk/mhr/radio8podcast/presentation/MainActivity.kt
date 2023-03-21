@@ -115,15 +115,16 @@ fun PodCastNavHost(
         composable(Screen.Landing.route) {
             WearApp(onNavigateToFetchPodcast = {
                 Log.i(DEBUG_LOG, "Calling navigate to ShowPodcasts")
-                podcastViewModel.loadPodcast(API_KEY)
-
-                if (!podcastViewModel.podcasts.hasObservers()) {
-                    podcastViewModel.podcasts.observe(lifecycleOwner) { t ->
-                        podcastViewModel.podcastList = t
-                        Log.i(DEBUG_LOG, "Observe called...")
-                        navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
-                    }
-                }
+                //podcastViewModel.loadPodcast(API_KEY)
+                podcastViewModel.fetchPodcastById(API_KEY)
+                navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
+//                if (!podcastViewModel.podcasts.hasObservers()) {
+//                    podcastViewModel.podcasts.observe(lifecycleOwner) { t ->
+//                        podcastViewModel.podcastList = t
+//                        Log.i(DEBUG_LOG, "Observe called...")
+//                        navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
+//                    }
+//                }
             },
                 onNavigateToSeeDownloadList = {
                     podcastViewModel.fetchDownloadList(PodcastUtils.getDownloadManager(context).downloadIndex)

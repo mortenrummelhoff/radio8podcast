@@ -74,6 +74,7 @@ dependencies {
             because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
         }
     }
+    implementation("io.coil-kt:coil-compose:2.2.2")
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'com.google.android.gms:play-services-wearable:18.0.0'
     implementation 'androidx.percentlayout:percentlayout:1.0.0'

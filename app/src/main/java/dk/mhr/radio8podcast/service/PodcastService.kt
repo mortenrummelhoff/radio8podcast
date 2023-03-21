@@ -12,13 +12,20 @@ import java.io.IOException
 
 class PodcastService(private val ioDispatcher: CoroutineDispatcher) {
 
-    suspend fun fetchPodcasts(API_KEY: String): String {
+    suspend fun searchPodcasts(API_KEY: String): String {
         return withContext(ioDispatcher) {
             var listenNotesService = ListenNotesApi(API_KEY)
             //listenNotesService.main()
             listenNotesService.search()?.toString(2) ?: ""
         }
     }
+
+    suspend fun fetchPodcastById(API_KEY: String, podcastId: String): String {
+        return withContext(ioDispatcher) {
+            ListenNotesApi(API_KEY).fetchPodcastById()!!.toString(2)
+        }
+    }
+
 
     suspend fun fetchDownloadPodcastList(podcastDao: PodcastDao, downloadIndex: DownloadIndex): ArrayList<PodcastViewModel.DataDownload> {
         return withContext(ioDispatcher) {

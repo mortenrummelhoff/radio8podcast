@@ -10,6 +10,8 @@ class ListenNotesApi(API_KEY: String) {
     var useMockData = true;
     var apiKey = API_KEY;
 
+    val R8DIO_PODCAST_ID = "8ade9927c58244859e7c363d055c9584"
+
     fun getDetailedInfo() {
         try {
             val objClient = ModClient(apiKey)
@@ -24,6 +26,32 @@ class ListenNotesApi(API_KEY: String) {
         }
     }
 
+    fun fetchPodcastById(podcastId: String = R8DIO_PODCAST_ID): JSONObject? {
+        if (useMockData) {
+            return JSONObject(MockFetchPodcastById().mockData);
+        }
+
+        try {
+            val objClient = ModClient(apiKey)
+            //objClient.getConnection()
+
+            val parameters = HashMap<String, String>()
+
+            parameters.put("id", podcastId)
+            parameters.put("sort_by_date", "1")
+            parameters.put("sort", "recent_first")
+
+            val response = objClient.fetchPodcastById(parameters)
+            //println("Response here below:")
+            //println(response)
+            println(response.toJSON().toString(2))
+            return response.toJSON()
+        } catch (e: ListenApiException) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
     fun search(): JSONObject? {
         if (useMockData) {
             return JSONObject(MockSearch().mockSearch);
@@ -35,9 +63,9 @@ class ListenNotesApi(API_KEY: String) {
 
             val parameters = HashMap<String, String>()
 
-            parameters.put("q", "undskyld vi roder")
-            parameters.put("sort_by_date", "0")
-            parameters.put("type", "episode")
+            parameters.put("q", "\"Undskyld vi roder\"")
+            parameters.put("sort_by_date", "1")
+            parameters.put("type", "podcast")
             parameters.put("len_min", "10")
 
             parameters.put("only_in", "title,description")
@@ -47,7 +75,7 @@ class ListenNotesApi(API_KEY: String) {
             val response = objClient.search(parameters)
             //println("Response here below:")
             //println(response)
-            //println(response.toJSON().toString(2))
+            println(response.toJSON().toString(2))
             return response.toJSON()
         } catch (e: ListenApiException) {
             e.printStackTrace()

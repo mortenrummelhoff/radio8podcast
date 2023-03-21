@@ -4,8 +4,6 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,10 +11,7 @@ import com.google.android.exoplayer2.offline.Download
 import com.google.android.exoplayer2.offline.DownloadIndex
 import dk.mhr.radio8podcast.data.PodcastDao
 import dk.mhr.radio8podcast.service.PodcastService
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.IOException
 
 class PodcastViewModel(private val podcastService: PodcastService) : ViewModel() {
 
@@ -27,6 +22,8 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     lateinit var podcastDao:PodcastDao
 
     val downloadList = mutableStateListOf<DataDownload>()
+
+    val podcastsById = mutableStateOf("")
 
     var podcasts = MutableLiveData<String>()
     var podcastList: String = String()
@@ -48,49 +45,24 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         viewModelScope.launch {
             downloadList.clear()
             downloadList.addAll(podcastService.fetchDownloadPodcastList(podcastDao, downloadIndex))
-
-
-//            withContext(Dispatchers.IO) {
-//
-//            downloadList.clear()
-//            //val terminalDownloads: MutableList<Download> = ArrayList()
-//            try {
-//                downloadIndex.getDownloads()
-//                    .use { cursor ->
-//                            Log.i("MHR", "using cursor");
-//                            var index = 0;
-//                            while (cursor.moveToNext()) {
-//                                Log.i("MHR", "index" + index + ", Download: " + cursor.download.bytesDownloaded);
-//                                //terminalDownloads.add(cursor.download)
-//                                //val dataDownload = DataDownload(cursor.download)
-//                                var startP: Long = 0
-//                                podcastDao.findByUrl(cursor.download.request.id).let {
-//                                    Log.i(DEBUG_LOG, "Found entry in database. StartPosition: " + it.startPosition)
-//                                    startP = it.startPosition!!
-//                                }
-//
-//                                downloadList.add(DataDownload(cursor.download, startP))
-//                                downloadList[index] = downloadList[index].copy(cursor.download, startP)
-//
-//                                index++;
-//                            }
-//                    }
-//            } catch (e: IOException) {
-//                Log.e("MHR", "Failed to load downloads.", e)
-//            }
-//        }
         Log.i(DEBUG_LOG, "fetchingDownloadList done");
     }}
 
-    data class DataDownload(val download: MutableState<Download>, val startPosition: Long)
+    fun fetchPodcastById(API_KEY: String) {
+        viewModelScope.launch {
+            podcastsById.value = podcastService.fetchPodcastById(API_KEY, "");
+        }
+    }
 
     fun loadPodcast(API_KEY: String): String {
 
         var pods = "initial value"
         viewModelScope.launch {
-            pods = podcastService.fetchPodcasts(API_KEY)
+            pods = podcastService.searchPodcasts(API_KEY)
             podcasts.postValue(pods);
         }
         return pods
     }
+
+    data class DataDownload(val download: MutableState<Download>, val startPosition: Long)
 }
