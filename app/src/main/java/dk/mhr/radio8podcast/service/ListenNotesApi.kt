@@ -2,13 +2,15 @@ package dk.mhr.radio8podcast.service
 
 import android.util.Log
 import com.listennotes.podcast_api.exception.ListenApiException
+import dk.mhr.radio8podcast.presentation.DEBUG_LOG
+import dk.mhr.radio8podcast.presentation.podcastViewModel
 import org.json.JSONObject
 import kotlin.collections.HashMap
 
 class ListenNotesApi(API_KEY: String) {
 
-    var useMockData = true;
-    var apiKey = API_KEY;
+    var useMockData = false
+    var apiKey = API_KEY
 
     val R8DIO_PODCAST_ID = "8ade9927c58244859e7c363d055c9584"
 
@@ -26,7 +28,7 @@ class ListenNotesApi(API_KEY: String) {
         }
     }
 
-    fun fetchPodcastById(podcastId: String = R8DIO_PODCAST_ID): JSONObject? {
+    fun fetchPodcastById(podcastId: String = R8DIO_PODCAST_ID, nextEpisodePubDate: String = ""): JSONObject? {
         if (useMockData) {
             return JSONObject(MockFetchPodcastById().mockData);
         }
@@ -40,6 +42,8 @@ class ListenNotesApi(API_KEY: String) {
             parameters.put("id", podcastId)
             parameters.put("sort_by_date", "1")
             parameters.put("sort", "recent_first")
+
+            parameters.put("next_episode_pub_date", nextEpisodePubDate)
 
             val response = objClient.fetchPodcastById(parameters)
             //println("Response here below:")

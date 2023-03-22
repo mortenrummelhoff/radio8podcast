@@ -12,6 +12,7 @@ import com.google.android.exoplayer2.offline.DownloadIndex
 import dk.mhr.radio8podcast.data.PodcastDao
 import dk.mhr.radio8podcast.service.PodcastService
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class PodcastViewModel(private val podcastService: PodcastService) : ViewModel() {
 
@@ -23,10 +24,11 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     val downloadList = mutableStateListOf<DataDownload>()
 
-    val podcastsById = mutableStateOf("")
+    var next_episode_pub_date = ""
+    val podcastByIdList = mutableStateListOf<JSONObject>()
 
-    var podcasts = MutableLiveData<String>()
-    var podcastList: String = String()
+    var loadingState = false
+
 
     fun formatLength(totalSecs: Long): String {
         val hours = totalSecs / 1000 / 3600;
@@ -41,7 +43,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     }
 
     fun fetchDownloadList(downloadIndex: DownloadIndex) {
-        Log.i("MHR", "fetchingDownloadList" + downloadIndex.getDownloads().count);
+        Log.i(DEBUG_LOG, "fetchingDownloadList" + downloadIndex.getDownloads().count);
         viewModelScope.launch {
             downloadList.clear()
             downloadList.addAll(podcastService.fetchDownloadPodcastList(podcastDao, downloadIndex))
@@ -49,19 +51,27 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     }}
 
     fun fetchPodcastById(API_KEY: String) {
-        viewModelScope.launch {
-            podcastsById.value = podcastService.fetchPodcastById(API_KEY, "");
-        }
-    }
+        Log.i(DEBUG_LOG,
+            "fetchPodcastById called!!!, next_episode_pub_date: $next_episode_pub_date"
+        )
 
-    fun loadPodcast(API_KEY: String): String {
-
-        var pods = "initial value"
         viewModelScope.launch {
-            pods = podcastService.searchPodcasts(API_KEY)
-            podcasts.postValue(pods);
+
+            val podcastJSONObject = podcastService.fetchPodcastById(API_KEY, "", next_episode_pub_date)
+            //podcastsById.value = podcastJSONObject
+
+
+            //val podcastByIdList: MutableList<JSONObject> = ArrayList()
+            val jsonObject = JSONObject(podcastJSONObject)
+            next_episode_pub_date = jsonObject.get("next_episode_pub_date").toString()
+
+            val jsonArray = jsonObject.getJSONArray("episodes")
+
+            (0 until jsonArray.length()).forEach {
+                podcastByIdList.add(jsonArray.getJSONObject(it))
+            }
+            loadingState = false
         }
-        return pods
     }
 
     data class DataDownload(val download: MutableState<Download>, val startPosition: Long)

@@ -116,7 +116,6 @@ fun PodCastNavHost(
             WearApp(onNavigateToFetchPodcast = {
                 Log.i(DEBUG_LOG, "Calling navigate to ShowPodcasts")
                 //podcastViewModel.loadPodcast(API_KEY)
-                podcastViewModel.fetchPodcastById(API_KEY)
                 navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
 //                if (!podcastViewModel.podcasts.hasObservers()) {
 //                    podcastViewModel.podcasts.observe(lifecycleOwner) { t ->
