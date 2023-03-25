@@ -51,13 +51,17 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         podcastViewModel.viewModelScope.launch {
             mediaItem?.let {
                 withContext(Dispatchers.IO) {
-                    val podcastEntity = podcastViewModel.podcastDao.findByUrl(it.mediaId)
+                    val podcastEntity =
+                        podcastViewModel.podcastRepository.podcastDao.findByUrl(it.mediaId)
                     Log.i(DEBUG_LOG, "Has database any data: $podcastEntity")
 
                     if (podcastEntity == null) {
-                        Log.i(DEBUG_LOG, "No entry in db for mediaId: ${mediaItem.mediaId} Creating new")
+                        Log.i(
+                            DEBUG_LOG,
+                            "No entry in db for mediaId: ${mediaItem.mediaId} Creating new"
+                        )
                         val newPodcastEntity = PodcastEntity(0, mediaItem.mediaId, 0)
-                        podcastViewModel.podcastDao.insertPodcast(newPodcastEntity)
+                        podcastViewModel.podcastRepository.podcastDao.insertPodcast(newPodcastEntity)
                     } else {
                         startP = podcastEntity.startPosition!!
                     }
@@ -67,7 +71,10 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                         player.prepare()
                         Log.i(DEBUG_LOG, "Start play some podcast")
                     } else {
-                        Log.i(DEBUG_LOG, "player already has media loaded: " + player.currentMediaItem?.mediaId)
+                        Log.i(
+                            DEBUG_LOG,
+                            "player already has media loaded: " + player.currentMediaItem?.mediaId
+                        )
                         if (mediaItem?.mediaId.equals(player.currentMediaItem?.mediaId)) {
                             Log.i(DEBUG_LOG, "Same mediaItem. Just continue playing")
                         } else {
@@ -94,20 +101,21 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 
     private fun stopPlay() {
         //player.pause()
-        val currentPosition:Long = player.currentPosition
+        val currentPosition: Long = player.currentPosition
         val currentMediaItem = player.currentMediaItem ?: return
         podcastViewModel.viewModelScope.launch {
-            withContext(Dispatchers.IO){
-                val podcastEntity = podcastViewModel.podcastDao.findByUrl(currentMediaItem.mediaId)
+            withContext(Dispatchers.IO) {
+                val podcastEntity =
+                    podcastViewModel.podcastRepository.podcastDao.findByUrl(currentMediaItem.mediaId)
                 if (podcastEntity != null) {
-                    val updatedPodcastEntity = podcastEntity.copy(podcastEntity.uid, podcastEntity.url, currentPosition)
+                    //val updatedPodcastEntity = podcastEntity.copy(podcastEntity.uid, podcastEntity.url, currentPosition)
+                    val updatedPodcastEntity = podcastEntity.copy(startPosition = currentPosition)
                     Log.i(DEBUG_LOG, "Updating currentPosition into DAO: $updatedPodcastEntity")
-                    podcastViewModel.podcastDao.updatePodcast(updatedPodcastEntity)
+                    podcastViewModel.podcastRepository.podcastDao.updatePodcast(updatedPodcastEntity)
                 }
             }
         }
     }
-
 
 
     @Composable
@@ -122,17 +130,48 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         //val mediaItem: MediaItem = MediaItem.fromUri(audio.toString())
 
         if (podcastViewModel.playerEventLister == null) {
-            podcastViewModel.playerEventLister = PodcastViewModel.PlayerEventLister(eventHappened = {
-                Log.i(DEBUG_LOG, "What happened: $it")
-                if (EVENT_IS_PLAYING_CHANGED == it) {
-                    if (!player.isPlaying) {
-                        stopPlay()
+            podcastViewModel.playerEventLister =
+                PodcastViewModel.PlayerEventLister(eventHappened = { p, it ->
+                    Log.i(DEBUG_LOG, "What happened: $it")
+                    if (EVENT_IS_PLAYING_CHANGED == it) {
+                        if (!player.isPlaying) {
+                            stopPlay()
+                        } else {
+
+                            podcastViewModel.viewModelScope.launch {
+                                withContext(Dispatchers.IO) {
+                                    podcastViewModel.podcastRepository.podcastDao.findCurrentPlaying()
+                                        .let {podcastEntity ->
+                                            Log.i(DEBUG_LOG,
+                                                "Found CurrentlyPlaying: $podcastEntity"
+                                            )
+                                            if (podcastEntity != null) {
+                                                podcastViewModel.podcastRepository.podcastDao.updatePodcast(
+                                                    podcastEntity.copy(
+                                                        currentPlaying = false
+                                                    )
+                                                )
+                                            }
+                                        }
+
+                                    Log.i(DEBUG_LOG, "Trying setting podcastEntry to currentPlaying: " +
+                                            p.mediaId)
+                                    val podcastEntity =
+                                        podcastViewModel.podcastRepository.podcastDao.findByUrl(p.mediaId!!)
+                                    if (podcastEntity != null) {
+                                        Log.i(DEBUG_LOG, "Found postcastEntry: $podcastEntity")
+                                        val updatedPodcastEntity = podcastEntity.copy(currentPlaying = true)
+                                        podcastViewModel.podcastRepository.podcastDao.updatePodcast(
+                                            updatedPodcastEntity
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
-            })
+                })
             player.addListener(podcastViewModel.playerEventLister!!)
         }
-
 
         val mediaItem = download?.request?.toMediaItem()
         preparePlayer(audio, mediaItem, events = {
@@ -157,7 +196,8 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 
         LaunchedEffect(Unit) {
             while (true) {
-                contentPositionString = podcastViewModel.formatLength(totalSecs = player.contentPosition)
+                contentPositionString =
+                    podcastViewModel.formatLength(totalSecs = player.contentPosition)
                 if (player.isPlaying) {
                     durationString = podcastViewModel.formatLength(player.duration)
                 }
@@ -218,14 +258,14 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                 Row {
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "-15s")
-                        player.seekTo(player.currentPosition-15000)
+                        player.seekTo(player.currentPosition - 15000)
                     }) {
                         Text("-15s")
                     }
                     Spacer(Modifier.padding(30.dp, 4.dp, 30.dp, 4.dp))
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "+15s")
-                        player.seekTo(player.currentPosition+15000)
+                        player.seekTo(player.currentPosition + 15000)
                     }) {
                         Text("+15s")
                     }

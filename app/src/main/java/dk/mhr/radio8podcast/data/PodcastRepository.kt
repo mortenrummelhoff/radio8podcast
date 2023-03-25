@@ -1,9 +1,12 @@
 package dk.mhr.radio8podcast.data
 
 
-class PodcastRepository {
+class PodcastRepository(val podcastDao: PodcastDao) {
 
 
+    fun setCurrentPlaying() {
+
+    }
 
 
 }

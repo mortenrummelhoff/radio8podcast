@@ -9,5 +9,7 @@ import androidx.room.PrimaryKey
 data class PodcastEntity(
     @PrimaryKey(autoGenerate = true) val uid: Int,
     @ColumnInfo(name = "url") val url: String?,
-    @ColumnInfo(name = "start_position") val startPosition: Long?
+    @ColumnInfo(name = "start_position") val startPosition: Long? = 0,
+    @ColumnInfo(name= "current_playing") val currentPlaying: Boolean? = false,
+    @ColumnInfo(name= "has_been_played") val hasBeenPlayed: Boolean? = false
 )

@@ -49,7 +49,7 @@ class PodcastService(private val ioDispatcher: CoroutineDispatcher) {
                                 if (it != null) {
                                     Log.i(
                                         DEBUG_LOG,
-                                        "Found entry in database. StartPosition: " + it.startPosition
+                                        "Found entry in database: $it"
                                     )
                                     startP = it.startPosition!!
                                 }

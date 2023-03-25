@@ -7,10 +7,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.offline.Download
 import com.google.android.exoplayer2.offline.DownloadIndex
 import dk.mhr.radio8podcast.data.PodcastDao
+import dk.mhr.radio8podcast.data.PodcastRepository
 import dk.mhr.radio8podcast.service.PodcastService
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -22,7 +24,8 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     }
     var playerEventLister:PlayerEventLister? = null
-    lateinit var podcastDao:PodcastDao
+    //lateinit var podcastDao:PodcastDao
+    lateinit var podcastRepository: PodcastRepository
 
     val downloadList = mutableStateListOf<DataDownload>()
 
@@ -48,7 +51,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         Log.i(DEBUG_LOG, "fetchingDownloadList" + downloadIndex.getDownloads().count);
         viewModelScope.launch {
             downloadList.clear()
-            downloadList.addAll(podcastService.fetchDownloadPodcastList(podcastDao, downloadIndex))
+            downloadList.addAll(podcastService.fetchDownloadPodcastList(podcastRepository.podcastDao, downloadIndex))
         Log.i(DEBUG_LOG, "fetchingDownloadList done");
     }}
 
@@ -76,11 +79,11 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         }
     }
 
-    class PlayerEventLister(val eventHappened: (k: Int) -> Unit) : Player.Listener {
+    class PlayerEventLister(val eventHappened: (currentMediaItem: MediaItem, k: Int) -> Unit) : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             (0 until events.size()).forEach {
                 Log.i("MHR", "onEvents called: $player Event: ${events.get(it)}")
-                eventHappened(events.get(it))
+                eventHappened(player.currentMediaItem!!, events.get(it))
 
 
             }

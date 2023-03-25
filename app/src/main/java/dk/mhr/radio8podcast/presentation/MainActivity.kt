@@ -17,30 +17,37 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.Composable
+
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import androidx.wear.compose.material.Chip
-import androidx.wear.compose.material.ChipDefaults
-import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Text
+import androidx.wear.compose.material.*
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import coil.compose.rememberAsyncImagePainter
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.offline.DownloadRequest
 import com.google.android.exoplayer2.offline.DownloadService
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
-import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.ui.StyledPlayerView
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.data.AppDatabase
+import dk.mhr.radio8podcast.data.PodcastEntity
+import dk.mhr.radio8podcast.data.PodcastRepository
 import dk.mhr.radio8podcast.presentation.navigation.AUDIO_URL
 import dk.mhr.radio8podcast.presentation.navigation.DOWNLOAD_ID
 import dk.mhr.radio8podcast.presentation.navigation.Screen
@@ -50,6 +57,8 @@ import dk.mhr.radio8podcast.service.PodcastDownloadService
 import dk.mhr.radio8podcast.service.PodcastService
 import dk.mhr.radio8podcast.service.PodcastUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.net.URLDecoder
 import java.net.URLEncoder
 
@@ -60,8 +69,15 @@ val DEBUG_LOG = "MHR";
 class MainActivity : ComponentActivity(), LifecycleOwner {
 
     private val appDatabase by lazy { AppDatabase.getDatabase(this) }
-    private val exoPlayer by lazy { ExoPlayer.Builder(this).setMediaSourceFactory(
-        DefaultMediaSourceFactory(this).setDataSourceFactory(PodcastUtils.getDataSourceFactory(this))).build() }
+    private val exoPlayer by lazy {
+        ExoPlayer.Builder(this).setMediaSourceFactory(
+            DefaultMediaSourceFactory(this).setDataSourceFactory(
+                PodcastUtils.getDataSourceFactory(
+                    this
+                )
+            )
+        ).build()
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,7 +86,8 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
 
 
         setContent {
-            podcastViewModel.podcastDao = appDatabase.podcastDao()
+            //podcastViewModel.podcastDao =
+            podcastViewModel.podcastRepository = PodcastRepository(appDatabase.podcastDao())
 
             exoPlayer.experimentalSetOffloadSchedulingEnabled(true)
             exoPlayer.setPlaybackSpeed(1.0f)
@@ -85,8 +102,8 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
 //                    }
 //                }
 
-                //Log.i("MHR", "onDownloadsChanged called. UI update")
-                //podcastViewModel.downloadChanged.postValue("UPDATE_UI")
+            //Log.i("MHR", "onDownloadsChanged called. UI update")
+            //podcastViewModel.downloadChanged.postValue("UPDATE_UI")
             //}
 
             Log.i(DEBUG_LOG, "Oncreate called we have player: $exoPlayer")
@@ -158,30 +175,44 @@ fun PodCastNavHost(
             ).SeeDownloadList(onPodCastListen = { downloadId, audio, title ->
                 Log.i("MHR", "DownloadId: $downloadId")
                 navController.navigate(
-                    route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(downloadId, "UTF8") + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(title, "UTF8")
+                    route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(
+                        downloadId,
+                        "UTF8"
+                    ) + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(
+                        title,
+                        "UTF8"
+                    )
                 ) { popUpTo(Screen.SeeDownloads.route) }
-            }, onPodCastDelete = {download ->
+            }, onPodCastDelete = { download ->
                 Log.i("MHR", "Now delete download: ${download.download.value.request.id}")
 
 
-                PodcastUtils.getDownloadManager(context).removeDownload(download.download.value.request.id)
+                PodcastUtils.getDownloadManager(context)
+                    .removeDownload(download.download.value.request.id)
             }, context)
         }
         composable(
             route = Screen.PodcastPlayer.route + "/{" + DOWNLOAD_ID + "}/{" + AUDIO_URL + "}/{" + TITLE + "}",
-            arguments = listOf(navArgument(DOWNLOAD_ID) { NavType.StringType }, navArgument(AUDIO_URL) { NavType.StringType }, navArgument(TITLE) {NavType.StringType})
+            arguments = listOf(
+                navArgument(DOWNLOAD_ID) { NavType.StringType },
+                navArgument(AUDIO_URL) { NavType.StringType },
+                navArgument(TITLE) { NavType.StringType })
 
         ) {
-            val download = PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex.getDownload(
-                URLDecoder.decode(
-                    it.arguments?.getString(
-                        DOWNLOAD_ID
-                    ), "UTF8"
+            val download =
+                PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex.getDownload(
+                    URLDecoder.decode(
+                        it.arguments?.getString(
+                            DOWNLOAD_ID
+                        ), "UTF8"
+                    )
                 )
-            )
 
-            PodcastPlayerComposable(player).showPlayer(it.arguments?.getString(AUDIO_URL), URLDecoder.decode(it.arguments?.getString(TITLE),"UTF8"),
-                download )
+            PodcastPlayerComposable(player).showPlayer(
+                it.arguments?.getString(AUDIO_URL),
+                URLDecoder.decode(it.arguments?.getString(TITLE), "UTF8"),
+                download
+            )
         }
     }
 
@@ -202,8 +233,9 @@ fun WearApp(
          */
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background),
+                .captionBarPadding().fillMaxSize()
+                .background(MaterialTheme.colors.background)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -228,6 +260,49 @@ fun WearApp(
                     Text("Click to see")
                 }
             )
+
+            val currentlyPlaying = remember { mutableStateOf<PodcastEntity?>(null) }
+
+            LaunchedEffect(Unit) {
+                podcastViewModel.viewModelScope.launch {
+                    withContext(Dispatchers.IO) {
+                        podcastViewModel.podcastRepository.podcastDao.findCurrentPlaying().let {
+                            it.let {
+                                currentlyPlaying.value = it
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (currentlyPlaying.value != null) {
+                Spacer(Modifier.size(padding))
+
+                Chip(
+
+                    colors = ChipDefaults.chipColors(
+                        contentColor = MaterialTheme.colors.onSurface,
+                        backgroundColor = MaterialTheme.colors.background
+                    ),
+                    onClick = {},
+                    label = {
+                        Text(
+                            text = currentlyPlaying.value!!.url!!,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center
+                        )
+                    },
+                )
+                Icon(
+                    painter = painterResource(id = R.drawable.icons_play),
+                    contentDescription = "PlayButton",
+                    modifier = Modifier.size(ChipDefaults.SmallIconSize)
+                        .wrapContentSize(align = Alignment.Center)
+                )
+
+            }
+
             //Greeting(greetingName = greetingName)
             //FetchPodcasts(onNavigateToFetchPodcast, onNavigateToSeeDownloadList)
         }
