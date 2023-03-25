@@ -279,7 +279,7 @@ fun WearApp(
                 Spacer(Modifier.size(padding))
 
                 Chip(
-
+                    modifier = Modifier.padding(start = 2.dp),
                     colors = ChipDefaults.chipColors(
                         contentColor = MaterialTheme.colors.onSurface,
                         backgroundColor = MaterialTheme.colors.background
@@ -288,18 +288,21 @@ fun WearApp(
                     label = {
                         Text(
                             text = currentlyPlaying.value!!.url!!,
-                            maxLines = 2,
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             textAlign = TextAlign.Center
                         )
                     },
+                    icon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.icons_play),
+                            contentDescription = "PlayButton",
+                            modifier = Modifier.size(ChipDefaults.SmallIconSize).padding(start = 4.dp)
+                                .wrapContentSize(align = Alignment.Center)
+                        )
+                    }
                 )
-                Icon(
-                    painter = painterResource(id = R.drawable.icons_play),
-                    contentDescription = "PlayButton",
-                    modifier = Modifier.size(ChipDefaults.SmallIconSize)
-                        .wrapContentSize(align = Alignment.Center)
-                )
+
 
             }
 
