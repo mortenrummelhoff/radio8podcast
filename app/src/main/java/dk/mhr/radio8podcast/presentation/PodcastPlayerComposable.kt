@@ -2,8 +2,6 @@ package dk.mhr.radio8podcast.presentation
 
 
 import android.util.Log
-import android.view.RoundedCorner
-import android.view.TextureView
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,7 +15,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.marginRight
 import androidx.lifecycle.viewModelScope
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Icon
@@ -30,7 +27,6 @@ import com.google.android.exoplayer2.Player.EVENT_IS_PLAYING_CHANGED
 import com.google.android.exoplayer2.Player.Listener
 import com.google.android.exoplayer2.offline.Download
 import com.google.android.exoplayer2.ui.StyledPlayerView.SHOW_BUFFERING_NEVER
-import com.google.android.exoplayer2.ui.StyledPlayerControlView
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.data.PodcastEntity
@@ -43,7 +39,7 @@ import kotlinx.coroutines.withContext
 class PodcastPlayerComposable(private val player: ExoPlayer) {
 
 
-    private fun startPlay(audio: String?, mediaItem: MediaItem?, events: () -> Unit) {
+    private fun preparePlayer(audio: String?, mediaItem: MediaItem?, events: () -> Unit) {
         Log.i(DEBUG_LOG, "Preparing player: " + audio.toString());
         Log.i(
             DEBUG_LOG,
@@ -59,7 +55,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                     Log.i(DEBUG_LOG, "Has database any data: $podcastEntity")
 
                     if (podcastEntity == null) {
-                        Log.i(DEBUG_LOG, "No entry in db for mediaId: ${mediaItem.mediaId}")
+                        Log.i(DEBUG_LOG, "No entry in db for mediaId: ${mediaItem.mediaId} Creating new")
                         val newPodcastEntity = PodcastEntity(0, mediaItem.mediaId, 0)
                         podcastViewModel.podcastDao.insertPodcast(newPodcastEntity)
                     } else {
@@ -84,7 +80,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
 
                     Log.i(
                         DEBUG_LOG,
-                        "CurrentMediaItemId" + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition
+                        "CurrentMediaItemId " + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition
                     )
 
                     //player.play()
@@ -105,57 +101,11 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                 val podcastEntity = podcastViewModel.podcastDao.findByUrl(currentMediaItem.mediaId)
                 if (podcastEntity != null) {
                     val updatedPodcastEntity = podcastEntity.copy(podcastEntity.uid, podcastEntity.url, currentPosition)
+                    Log.i(DEBUG_LOG, "Updating currentPosition into DAO: $updatedPodcastEntity")
                     podcastViewModel.podcastDao.updatePodcast(updatedPodcastEntity)
                 }
             }
         }
-    }
-
-    @Composable
-    fun showPlayer2(audio: String?, title: String?, download: Download?) {
-        val playerView = StyledPlayerView(LocalContext.current)
-        playerView.player = player
-        playerView.clearAnimation()
-        playerView.useArtwork = false
-        playerView.setShowRewindButton(false)
-        playerView.setShowFastForwardButton(false)
-        playerView.setShowMultiWindowTimeBar(false)
-        playerView.setShowVrButton(false)
-        playerView.setShowNextButton(false)
-        playerView.setShowPreviousButton(false)
-        playerView.setShowBuffering(SHOW_BUFFERING_NEVER)
-        //playerView.setShow
-        //playerView.
-                //playerView.showContextMenu()
-        //playerView.show
-        //playerView.offsetTopAndBottom(50)
-        playerView.setShowMultiWindowTimeBar(false)
-
-        //playerView.contentDescription = "mhrasdf"
-        playerView.setPadding(15, 0, 10, 30)
-
-
-            player.addListener(PlayerEventLister(eventHappened = {
-                Log.i(DEBUG_LOG, "What happened: $it")
-                if (EVENT_IS_PLAYING_CHANGED == it) {
-                    stopPlay()
-                }
-            }))
-
-        val mediaItem = download?.request?.toMediaItem()
-        startPlay(audio, mediaItem, {})
-//        player.setMediaItem(mediaItem!!)
-//        player.prepare()
-
-
-        //Box(modifier = Modifier.fillMaxSize()) {
-            AndroidView(
-
-                factory = {
-                    playerView
-                })
-        //}
-
     }
 
 
@@ -170,8 +120,22 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         //var playedDownloadList by rememberSaveable { mutableStateListOf()}
 
         //val mediaItem: MediaItem = MediaItem.fromUri(audio.toString())
+
+        if (podcastViewModel.playerEventLister == null) {
+            podcastViewModel.playerEventLister = PodcastViewModel.PlayerEventLister(eventHappened = {
+                Log.i(DEBUG_LOG, "What happened: $it")
+                if (EVENT_IS_PLAYING_CHANGED == it) {
+                    if (!player.isPlaying) {
+                        stopPlay()
+                    }
+                }
+            })
+            player.addListener(podcastViewModel.playerEventLister!!)
+        }
+
+
         val mediaItem = download?.request?.toMediaItem()
-        startPlay(audio, mediaItem, events = {
+        preparePlayer(audio, mediaItem, events = {
 
         })
         var contentPositionString by remember { mutableStateOf("") }
@@ -297,22 +261,4 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
             }
         }
     }
-
-
-    class PlayerEventLister(val eventHappened: (k: Int) -> Unit) : Listener {
-        override fun onEvents(player: Player, events: Player.Events) {
-            (0 until events.size()).forEach {
-                Log.i("MHR", "onEvents called: $player Event: ${events.get(it)}")
-                eventHappened(events.get(it))
-
-
-            }
-        }
-    }
-
-    data class ContentPositionClass(var con: String)
-
-
-    data class PlayableDownload(val download: Download, val startPosition: Int)
-
 }

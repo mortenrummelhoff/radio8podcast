@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
     private val exoPlayer by lazy { ExoPlayer.Builder(this).setMediaSourceFactory(
         DefaultMediaSourceFactory(this).setDataSourceFactory(PodcastUtils.getDataSourceFactory(this))).build() }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

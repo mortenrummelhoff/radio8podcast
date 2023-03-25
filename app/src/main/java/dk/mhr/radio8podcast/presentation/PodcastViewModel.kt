@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.offline.Download
 import com.google.android.exoplayer2.offline.DownloadIndex
 import dk.mhr.radio8podcast.data.PodcastDao
@@ -18,8 +19,9 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     init {
         Log.i("MHR", "PodcastViewModel initialized")
-    }
 
+    }
+    var playerEventLister:PlayerEventLister? = null
     lateinit var podcastDao:PodcastDao
 
     val downloadList = mutableStateListOf<DataDownload>()
@@ -74,5 +76,18 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         }
     }
 
+    class PlayerEventLister(val eventHappened: (k: Int) -> Unit) : Player.Listener {
+        override fun onEvents(player: Player, events: Player.Events) {
+            (0 until events.size()).forEach {
+                Log.i("MHR", "onEvents called: $player Event: ${events.get(it)}")
+                eventHappened(events.get(it))
+
+
+            }
+        }
+    }
+
     data class DataDownload(val download: MutableState<Download>, val startPosition: Long)
+
+
 }
