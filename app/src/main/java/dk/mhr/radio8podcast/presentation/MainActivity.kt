@@ -61,6 +61,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.nio.charset.Charset
 
 var podcastService = PodcastService(Dispatchers.IO)
 var podcastViewModel = PodcastViewModel(podcastService);
@@ -146,7 +147,21 @@ fun PodCastNavHost(
                 onNavigateToSeeDownloadList = {
                     podcastViewModel.fetchDownloadList(PodcastUtils.getDownloadManager(context).downloadIndex)
                     navController.navigate(Screen.SeeDownloads.route)
-                })
+                },
+                    onPodCastListen = { downloadId, audio, title ->
+                        Log.i("MHR", "DownloadId: $downloadId")
+                        navController.navigate(
+                            route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(
+                                downloadId,
+                                "UTF8"
+                            ) + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(
+                                title,
+                                "UTF8"
+                            )
+                        ) { popUpTo(Screen.SeeDownloads.route) }
+                }
+            )
+
         }
         composable(Screen.ShowPodcast.route) {
             //Log.i(DEBUG_LOG, "backStackEntry: ${it.destination}")
@@ -221,7 +236,8 @@ fun PodCastNavHost(
 @Composable
 fun WearApp(
     onNavigateToFetchPodcast: () -> Unit,
-    onNavigateToSeeDownloadList: () -> Unit
+    onNavigateToSeeDownloadList: () -> Unit,
+    onPodCastListen: (downloadId: String, audio: String, title: String) -> Unit
 ) {
 
     val padding = 6.dp
@@ -279,12 +295,18 @@ fun WearApp(
                 Spacer(Modifier.size(padding))
 
                 Chip(
-                    modifier = Modifier.padding(start = 2.dp),
+                    modifier = Modifier.padding(start = 0.dp),
                     colors = ChipDefaults.chipColors(
                         contentColor = MaterialTheme.colors.onSurface,
                         backgroundColor = MaterialTheme.colors.background
                     ),
-                    onClick = {},
+                    onClick = {
+                        onPodCastListen(
+                            currentlyPlaying.value!!.url!!,
+                            currentlyPlaying.value!!.url!!,
+                            currentlyPlaying.value!!.url!!
+                        )
+                    },
                     label = {
                         Text(
                             text = currentlyPlaying.value!!.url!!,
@@ -295,9 +317,9 @@ fun WearApp(
                     },
                     icon = {
                         Icon(
-                            painter = painterResource(id = R.drawable.icons_play),
+                            painter = painterResource(id = R.drawable.music_note),
                             contentDescription = "PlayButton",
-                            modifier = Modifier.size(ChipDefaults.SmallIconSize).padding(start = 4.dp)
+                            modifier = Modifier.size(ChipDefaults.SmallIconSize).padding(start = 0.dp)
                                 .wrapContentSize(align = Alignment.Center)
                         )
                     }

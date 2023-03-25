@@ -128,7 +128,7 @@ class SeeDownloadListComposable(
                 }
             }
 
-            LazyColumn(modifier = Modifier
+            ScalingLazyColumn (modifier = Modifier
             .captionBarPadding().fillMaxWidth()
 //                .padding(10.dp, 30.dp, 10.dp, 30.dp)
                 .background(MaterialTheme.colors.background),

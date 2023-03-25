@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.wear.compose.material.*
+
 import androidx.wear.compose.material.ChipDefaults
 import coil.compose.AsyncImagePainter
 import coil.compose.AsyncImagePainter.State.Empty.painter
@@ -103,18 +104,25 @@ class PodcastListComposable {
 //                }
                 val listState = rememberLazyListState()
 
-
-
-                val showButton by remember {
+                val scalingListState = rememberScalingLazyListState()
+                val loadNextPage by remember {
                     derivedStateOf {
-                        Log.i(DEBUG_LOG, "ShowButton: " + listState.firstVisibleItemIndex)
-                        listState.firstVisibleItemIndex >= podcastViewModel.podcastByIdList.size-3
+                        Log.i(DEBUG_LOG, "ShowButton: " + scalingListState.centerItemIndex)
+                        scalingListState.centerItemIndex >= podcastViewModel.podcastByIdList.size-1
                     }
                 }
-                Log.i(DEBUG_LOG, "ShowButton: $showButton")
 
 
-                LazyColumn(state = listState,
+//                val showButton by remember {
+//                    derivedStateOf {
+//                        Log.i(DEBUG_LOG, "ShowButton: " + listState.firstVisibleItemIndex)
+//                        listState.firstVisibleItemIndex >= podcastViewModel.podcastByIdList.size-3
+//                    }
+//                }
+//                Log.i(DEBUG_LOG, "ShowButton: $showButton")
+
+
+                ScalingLazyColumn(state = scalingListState,
                     modifier = Modifier
                         .captionBarPadding().fillMaxWidth()
                         //.padding(10.dp, 30.dp, 10.dp, 30.dp)
@@ -206,8 +214,8 @@ class PodcastListComposable {
                         }
                     }
                 }
-                if (showButton) {
-                    Log.i(DEBUG_LOG, "ShowText: $showButton. LoadingState: "+ podcastViewModel.loadingState)
+                if (loadNextPage) {
+                    Log.i(DEBUG_LOG, "ShowText: $loadNextPage. LoadingState: "+ podcastViewModel.loadingState)
 
                     if(!podcastViewModel.loadingState) {
                         podcastViewModel.loadingState = true;
