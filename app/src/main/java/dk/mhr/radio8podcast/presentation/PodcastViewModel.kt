@@ -1,5 +1,6 @@
 package dk.mhr.radio8podcast.presentation
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
@@ -23,6 +24,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         Log.i("MHR", "PodcastViewModel initialized")
 
     }
+    var CONTEXT: Context? = null;
     var playerEventLister:PlayerEventLister? = null
     //lateinit var podcastDao:PodcastDao
     lateinit var podcastRepository: PodcastRepository

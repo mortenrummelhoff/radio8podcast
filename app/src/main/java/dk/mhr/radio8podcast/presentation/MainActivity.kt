@@ -87,6 +87,7 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
 
 
         setContent {
+            podcastViewModel.CONTEXT = this
             //podcastViewModel.podcastDao =
             podcastViewModel.podcastRepository = PodcastRepository(appDatabase.podcastDao())
 

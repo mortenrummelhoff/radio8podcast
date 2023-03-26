@@ -20,6 +20,9 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
@@ -31,6 +34,7 @@ import com.google.android.exoplayer2.ui.StyledPlayerView
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.data.PodcastEntity
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
+import dk.mhr.radio8podcast.service.PlayerWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -159,13 +163,16 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                                     val podcastEntity =
                                         podcastViewModel.podcastRepository.podcastDao.findByUrl(p.mediaId!!)
                                     if (podcastEntity != null) {
-                                        Log.i(DEBUG_LOG, "Found postcastEntry: $podcastEntity")
+                                        Log.i(DEBUG_LOG, "Found podcastEntry: $podcastEntity")
                                         val updatedPodcastEntity = podcastEntity.copy(currentPlaying = true)
                                         podcastViewModel.podcastRepository.podcastDao.updatePodcast(
                                             updatedPodcastEntity
                                         )
                                     }
                                 }
+                            }.let {
+                                val playerWorkRequest: WorkRequest = OneTimeWorkRequestBuilder<PlayerWorker>().build()
+                                WorkManager.getInstance(podcastViewModel.CONTEXT!!).enqueue(playerWorkRequest)
                             }
                         }
                     }

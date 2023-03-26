@@ -53,6 +53,9 @@ android {
 
 dependencies {
 
+    def work_version = "2.8.1"
+    implementation("androidx.work:work-runtime-ktx:$work_version")
+    implementation("androidx.work:work-rxjava2:$work_version")
 
     def room_version = "2.5.0"
 
@@ -80,7 +83,7 @@ dependencies {
     implementation 'androidx.percentlayout:percentlayout:1.0.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
-    implementation "androidx.compose.ui:ui:$compose_version"
+    //implementation "androidx.compose.ui:ui:$compose_version"
     implementation "androidx.wear.compose:compose-navigation:$wear_compose_version"
     implementation "androidx.wear.compose:compose-material:$wear_compose_version"
     implementation "androidx.wear.compose:compose-foundation:$wear_compose_version"
