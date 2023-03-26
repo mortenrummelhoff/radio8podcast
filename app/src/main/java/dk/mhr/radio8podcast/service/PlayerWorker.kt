@@ -4,7 +4,10 @@ package dk.mhr.radio8podcast.service
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.media.AudioManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -15,6 +18,7 @@ import androidx.work.WorkerParameters
 import com.google.android.exoplayer2.MediaItem
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.DEBUG_LOG
+import dk.mhr.radio8podcast.presentation.MainActivity
 import dk.mhr.radio8podcast.presentation.podcastViewModel
 import kotlinx.coroutines.*
 
@@ -40,6 +44,7 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
 
     private fun createNotification(currentPosition: Long, mediaId: String?): Notification {
         Log.i(DEBUG_LOG, "createNotification")
+
         val notification = NotificationCompat.Builder(applicationContext, "Channel1")
             .setContentTitle(mediaId)
             .setContentText(mediaId)
@@ -47,7 +52,9 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
             .setContentText(currentPosition.toString())
             .setSmallIcon(R.drawable.music_note)
             .setOngoing(true)
-
+            .setContentIntent(PendingIntent.getActivity(podcastViewModel.CONTEXT, 0,
+                Intent.makeMainActivity(ComponentName(podcastViewModel.CONTEXT!!, MainActivity::class.java)),
+                PendingIntent.FLAG_IMMUTABLE))
             // Add the cancel action to the notification which can
             // be used to cancel the worker
         //    .addAction(android.R.drawable.ic_delete, cancel, intent)
