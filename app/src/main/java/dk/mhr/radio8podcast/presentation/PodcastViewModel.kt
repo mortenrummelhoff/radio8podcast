@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.offline.Download
@@ -26,6 +27,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     }
     var CONTEXT: Context? = null;
     var playerEventLister:PlayerEventLister? = null
+    var player: ExoPlayer? = null
     //lateinit var podcastDao:PodcastDao
     lateinit var podcastRepository: PodcastRepository
 

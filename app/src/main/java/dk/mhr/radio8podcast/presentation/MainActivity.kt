@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
 
         setContent {
             podcastViewModel.CONTEXT = this
-            //podcastViewModel.podcastDao =
+            podcastViewModel.player = exoPlayer
             podcastViewModel.podcastRepository = PodcastRepository(appDatabase.podcastDao())
 
             exoPlayer.experimentalSetOffloadSchedulingEnabled(true)

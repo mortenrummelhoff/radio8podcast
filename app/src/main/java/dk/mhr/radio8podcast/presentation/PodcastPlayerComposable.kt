@@ -21,6 +21,7 @@ import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import com.google.android.exoplayer2.ExoPlayer
@@ -136,9 +137,9 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         if (podcastViewModel.playerEventLister == null) {
             podcastViewModel.playerEventLister =
                 PodcastViewModel.PlayerEventLister(eventHappened = { p, it ->
-                    Log.i(DEBUG_LOG, "What happened: $it")
                     if (EVENT_IS_PLAYING_CHANGED == it) {
                         if (!player.isPlaying) {
+                            Log.i(DEBUG_LOG, "Stop player event. Stopping")
                             stopPlay()
                         } else {
 
@@ -170,13 +171,17 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                                         )
                                     }
                                 }
-                            }.let {
-                                val playerWorkRequest: WorkRequest = OneTimeWorkRequestBuilder<PlayerWorker>().build()
-                                WorkManager.getInstance(podcastViewModel.CONTEXT!!).enqueue(playerWorkRequest)
                             }
+                            Log.i(DEBUG_LOG, "Player started. Create and start PlayerWorkRequest!")
+
+                            val playerWorkRequest: WorkRequest = OneTimeWorkRequestBuilder<PlayerWorker>().
+                            setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST).build()
+                            WorkManager.getInstance(podcastViewModel.CONTEXT!!).enqueue(playerWorkRequest)
+
                         }
                     }
                 })
+            Log.i(DEBUG_LOG, "Adding player listener")
             player.addListener(podcastViewModel.playerEventLister!!)
         }
 
