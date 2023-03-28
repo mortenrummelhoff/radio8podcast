@@ -1,9 +1,3 @@
-/* While this template provides a good starting point for using Wear Compose, you can always
- * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter and
- * https://github.com/android/wear-os-samples/tree/main/ComposeAdvanced to find the most up to date
- * changes to the libraries and their usages.
- */
-
 package dk.mhr.radio8podcast.presentation
 
 //import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -85,7 +79,6 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
         super.onCreate(savedInstanceState)
 
 
-
         setContent {
             podcastViewModel.CONTEXT = this
             podcastViewModel.player = exoPlayer
@@ -98,16 +91,6 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
             PodcastUtils.getDownloadTracker(LocalContext.current).addListener {
                 podcastViewModel.fetchDownloadList(downloadIndex)
             }
-//                if (!podcastViewModel.downloadChanged.hasObservers()) {
-//                    podcastViewModel.downloadChanged.observe(this){
-//                        podcastViewModel.fetchDownloadList(downloadIndex)
-//                    }
-//                }
-
-            //Log.i("MHR", "onDownloadsChanged called. UI update")
-            //podcastViewModel.downloadChanged.postValue("UPDATE_UI")
-            //}
-
             Log.i(DEBUG_LOG, "Oncreate called we have player: $exoPlayer")
             PodCastNavHost("WearApp", this, this, exoPlayer)
         }
@@ -135,31 +118,23 @@ fun PodCastNavHost(
         composable(Screen.Landing.route) {
             WearApp(onNavigateToFetchPodcast = {
                 Log.i(DEBUG_LOG, "Calling navigate to ShowPodcasts")
-                //podcastViewModel.loadPodcast(API_KEY)
                 navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
-//                if (!podcastViewModel.podcasts.hasObservers()) {
-//                    podcastViewModel.podcasts.observe(lifecycleOwner) { t ->
-//                        podcastViewModel.podcastList = t
-//                        Log.i(DEBUG_LOG, "Observe called...")
-//                        navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
-//                    }
-//                }
             },
                 onNavigateToSeeDownloadList = {
                     podcastViewModel.fetchDownloadList(PodcastUtils.getDownloadManager(context).downloadIndex)
                     navController.navigate(Screen.SeeDownloads.route)
                 },
-                    onPodCastListen = { downloadId, audio, title ->
-                        Log.i("MHR", "DownloadId: $downloadId")
-                        navController.navigate(
-                            route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(
-                                downloadId,
-                                "UTF8"
-                            ) + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(
-                                title,
-                                "UTF8"
-                            )
-                        ) { popUpTo(Screen.SeeDownloads.route) }
+                onPodCastListen = { downloadId, title ->
+                    Log.i("MHR", "DownloadId: $downloadId")
+                    navController.navigate(
+                        route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(
+                            downloadId,
+                            "UTF8"
+                        ) + "/" + URLEncoder.encode(
+                            title,
+                            "UTF8"
+                        )
+                    ) { popUpTo(Screen.SeeDownloads.route) }
                 }
             )
 
@@ -188,13 +163,13 @@ fun PodCastNavHost(
                 PodcastUtils.getDownloadTracker(LocalContext.current),
                 PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex,
                 lifecycleOwner
-            ).SeeDownloadList(onPodCastListen = { downloadId, audio, title ->
+            ).SeeDownloadList(onPodCastListen = { downloadId, title ->
                 Log.i("MHR", "DownloadId: $downloadId")
                 navController.navigate(
                     route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(
                         downloadId,
                         "UTF8"
-                    ) + "/" + URLEncoder.encode(audio, "UTF8") + "/" + URLEncoder.encode(
+                    ) + "/" + URLEncoder.encode(
                         title,
                         "UTF8"
                     )
@@ -208,10 +183,9 @@ fun PodCastNavHost(
             }, context)
         }
         composable(
-            route = Screen.PodcastPlayer.route + "/{" + DOWNLOAD_ID + "}/{" + AUDIO_URL + "}/{" + TITLE + "}",
+            route = Screen.PodcastPlayer.route + "/{" + DOWNLOAD_ID + "}/{" + TITLE + "}",
             arguments = listOf(
                 navArgument(DOWNLOAD_ID) { NavType.StringType },
-                navArgument(AUDIO_URL) { NavType.StringType },
                 navArgument(TITLE) { NavType.StringType })
 
         ) {
@@ -225,7 +199,6 @@ fun PodCastNavHost(
                 )
 
             PodcastPlayerComposable(player).showPlayer(
-                it.arguments?.getString(AUDIO_URL),
                 URLDecoder.decode(it.arguments?.getString(TITLE), "UTF8"),
                 download
             )
@@ -238,7 +211,7 @@ fun PodCastNavHost(
 fun WearApp(
     onNavigateToFetchPodcast: () -> Unit,
     onNavigateToSeeDownloadList: () -> Unit,
-    onPodCastListen: (downloadId: String, audio: String, title: String) -> Unit
+    onPodCastListen: (downloadId: String, title: String) -> Unit
 ) {
 
     val padding = 6.dp
@@ -304,7 +277,6 @@ fun WearApp(
                     onClick = {
                         onPodCastListen(
                             currentlyPlaying.value!!.url!!,
-                            currentlyPlaying.value!!.url!!,
                             currentlyPlaying.value!!.url!!
                         )
                     },
@@ -320,7 +292,8 @@ fun WearApp(
                         Icon(
                             painter = painterResource(id = R.drawable.music_note),
                             contentDescription = "PlayButton",
-                            modifier = Modifier.size(ChipDefaults.SmallIconSize).padding(start = 0.dp)
+                            modifier = Modifier.size(ChipDefaults.SmallIconSize)
+                                .padding(start = 0.dp)
                                 .wrapContentSize(align = Alignment.Center)
                         )
                     }

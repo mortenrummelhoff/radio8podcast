@@ -57,7 +57,7 @@ class SeeDownloadListComposable(
 
     @Composable
     fun SeeDownloadList(
-        onPodCastListen: (downloadId: String, audio: String, title: String) -> Unit,
+        onPodCastListen: (downloadId: String, title: String) -> Unit,
         onPodCastDelete: (download: PodcastViewModel.DataDownload) -> Unit,
         context: Context
     ) {
@@ -145,7 +145,6 @@ class SeeDownloadListComposable(
                         onClick = {
                             onPodCastListen(
                                 download.download.value.request.id,
-                                download.download.value.request.uri.toString(),
                                 download.download.value.request.data.toString(Charset.defaultCharset())
                             )
                         },

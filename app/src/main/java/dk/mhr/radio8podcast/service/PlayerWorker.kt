@@ -49,7 +49,7 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
             .setContentTitle(mediaId)
             .setContentText(mediaId)
             .setSilent(true)
-            .setContentText(currentPosition.toString())
+            .setContentText(podcastViewModel.formatLength(currentPosition))
             .setSmallIcon(R.drawable.music_note)
             .setOngoing(true)
             .setContentIntent(PendingIntent.getActivity(podcastViewModel.CONTEXT, 0,
@@ -65,7 +65,7 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
 
 
     override suspend fun doWork(): Result {
-        Log.i(DEBUG_LOG, "okay okay....Now we have a worker for exo player")
+        Log.i(DEBUG_LOG, "Start work for active player keeping it from sleep")
 
         //setForeground(createForegroundInfo(podcastViewModel.player!!.currentPosition, podcastViewModel.player!!.currentMediaItem!!.mediaId))
 
@@ -90,12 +90,12 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
 
             delay(5000)
         }
-
+        Log.i(DEBUG_LOG, "Finish work for active player allowing to go to sleep")
         return Result.success()
     }
 
     private fun createForegroundInfo(currentPosition: Long?, mediaId: String?): ForegroundInfo {
-        Log.i(DEBUG_LOG, "createForegroundInfo called: " + currentPosition + ", mediaId: " + mediaId)
+        Log.i(DEBUG_LOG, "createForegroundInfo called: $currentPosition, mediaId: $mediaId")
         return ForegroundInfo(nextNotificationId++, createNotification(currentPosition!!, mediaId))
     }
 }
