@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -43,129 +44,13 @@ import kotlinx.coroutines.withContext
 
 class PodcastPlayerComposable(private val player: ExoPlayer) {
 
-
-    private fun preparePlayer(mediaItem: MediaItem?, events: () -> Unit) {
-        Log.i(DEBUG_LOG, "Preparing player for : ${mediaItem?.mediaId}");
-        var startP = 0L
-
-        podcastViewModel.viewModelScope.launch {
-            mediaItem?.let {
-                withContext(Dispatchers.IO) {
-                    val podcastEntity = podcastViewModel.podcastRepository.podcastDao.findByUrl(it.mediaId)
-
-                    if (podcastEntity == null) {
-                        Log.i( DEBUG_LOG,"Podcast does not exist in db for mediaId: ${mediaItem.mediaId} Creating new")
-                        val newPodcastEntity = PodcastEntity(0, mediaItem.mediaId, 0)
-                        podcastViewModel.podcastRepository.podcastDao.insertPodcast(newPodcastEntity)
-                    } else {
-                        Log.i( DEBUG_LOG,"Podcast exist in db for mediaId: ${mediaItem.mediaId} With startPosition: ${podcastEntity.startPosition}")
-                        startP = podcastEntity.startPosition!!
-                    }
-                }.let {
-                    if (player.mediaItemCount == 0) {
-                        mediaItem?.let { player.setMediaItem(it, startP) }
-                        player.prepare()
-                        Log.i(DEBUG_LOG, "Start play some podcast")
-                    } else {
-                        if (mediaItem?.mediaId.equals(player.currentMediaItem?.mediaId)) {
-                            Log.i(DEBUG_LOG,"Player already loaded with same mediaItem: $mediaItem")
-                        } else {
-                            Log.i(DEBUG_LOG, "Player loaded with other mediaItem that selected. Load new into player: $mediaItem")
-                            mediaItem?.let { player.setMediaItem(it, startP) }
-                            player.prepare()
-                        }
-                    }
-
-                    Log.i(
-                        DEBUG_LOG,
-                        "CurrentMediaItemId " + player.currentMediaItem?.mediaId + ", contentPosition: " + player.contentPosition
-                    )
-                }
-            }
-        }
-    }
-
-    private fun stopPlay() {
-        val currentPosition: Long = player.currentPosition
-        val currentMediaItem = player.currentMediaItem ?: return
-        podcastViewModel.viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val podcastEntity =
-                    podcastViewModel.podcastRepository.podcastDao.findByUrl(currentMediaItem.mediaId)
-                if (podcastEntity != null) {
-                    val updatedPodcastEntity = podcastEntity.copy(startPosition = currentPosition)
-                    Log.i(DEBUG_LOG, "Updating currentPosition into DAO: $updatedPodcastEntity")
-                    podcastViewModel.podcastRepository.podcastDao.updatePodcast(updatedPodcastEntity)
-                }
-            }
-        }
-    }
-
-
     @Composable
-    fun showPlayer(title: String?, download: Download?) {
+    fun showPlayer(title: String?) {
 
         var checked by remember { mutableStateOf(true) }
-
-        if (podcastViewModel.playerEventLister == null) {
-            podcastViewModel.playerEventLister =
-                PodcastViewModel.PlayerEventLister(eventHappened = { p, it ->
-                    if (EVENT_IS_PLAYING_CHANGED == it) {
-                        if (!player.isPlaying) {
-                            Log.i(DEBUG_LOG, "Stop player event. Stopping")
-                            stopPlay()
-                        } else {
-
-                            podcastViewModel.viewModelScope.launch {
-                                withContext(Dispatchers.IO) {
-                                    podcastViewModel.podcastRepository.podcastDao.findCurrentPlaying()
-                                        .let {podcastEntity ->
-                                            Log.i(DEBUG_LOG,
-                                                "Found CurrentlyPlaying: $podcastEntity"
-                                            )
-                                            if (podcastEntity != null) {
-                                                podcastViewModel.podcastRepository.podcastDao.updatePodcast(
-                                                    podcastEntity.copy(
-                                                        currentPlaying = false
-                                                    )
-                                                )
-                                            }
-                                        }
-
-                                    Log.i(DEBUG_LOG, "Trying setting podcastEntry to currentPlaying: " +
-                                            p.mediaId)
-                                    val podcastEntity =
-                                        podcastViewModel.podcastRepository.podcastDao.findByUrl(p.mediaId!!)
-                                    if (podcastEntity != null) {
-                                        Log.i(DEBUG_LOG, "Found podcastEntry: $podcastEntity")
-                                        val updatedPodcastEntity = podcastEntity.copy(currentPlaying = true)
-                                        podcastViewModel.podcastRepository.podcastDao.updatePodcast(
-                                            updatedPodcastEntity
-                                        )
-                                    }
-                                }
-                            }
-                            Log.i(DEBUG_LOG, "Player started. Create and start PlayerWorkRequest!")
-
-                            val playerWorkRequest: WorkRequest = OneTimeWorkRequestBuilder<PlayerWorker>().
-                            setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST).build()
-                            WorkManager.getInstance(podcastViewModel.CONTEXT!!).enqueue(playerWorkRequest)
-
-                        }
-                    }
-                })
-            Log.i(DEBUG_LOG, "Adding player listener")
-            player.addListener(podcastViewModel.playerEventLister!!)
-        }
-
-        val mediaItem = download?.request?.toMediaItem()
-        preparePlayer(mediaItem, events = {
-
-        })
         var contentPositionString by remember { mutableStateOf("") }
         var durationString by remember { mutableStateOf("") }
         val padding = 6.dp
-
 
         val (contentString) = when {
             checked -> stringResource(R.string.increateVolume) to stringResource(R.string.increateVolume)
@@ -177,17 +62,16 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
             else -> painterResource(R.drawable.icons_play) to painterResource(R.drawable.icons_play)
         }
 
-        //var contentPosition = player.contentPosition
-
         LaunchedEffect(Unit) {
             while (true) {
                 contentPositionString =
                     podcastViewModel.formatLength(totalSecs = player.contentPosition)
-                if (player.isPlaying) {
-                    durationString = podcastViewModel.formatLength(player.duration)
-                }
                 //save duration to state
                 delay(1000)
+
+                if (!player.isLoading) {
+                    durationString = podcastViewModel.formatLength(player.duration)
+                }
             }
         }
 
@@ -229,8 +113,11 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                         painter = playIcon
                     )
                 }
-                Spacer(Modifier.size(padding))
-                Text(text = title!!, softWrap = true, maxLines = 2, fontSize = 12.sp)
+                Spacer(Modifier.size(2.dp))
+                Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.padding(10.dp, 0.dp)) {
+                    Text(text = title!!, overflow = TextOverflow.Ellipsis, softWrap = true, maxLines = 3, fontSize = 12.sp)
+                }
+
                 if (durationString.isEmpty()) {
                     Text(contentPositionString)
                 } else {

@@ -72,20 +72,22 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
                 )
             )
         ).build()
+
     }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
         setContent {
             podcastViewModel.CONTEXT = this
             podcastViewModel.player = exoPlayer
-            podcastViewModel.podcastRepository = PodcastRepository(appDatabase.podcastDao())
-
+            exoPlayer.removeListener(podcastViewModel.playerEventLister)
+            exoPlayer.addListener(podcastViewModel.playerEventLister)
             exoPlayer.experimentalSetOffloadSchedulingEnabled(true)
             exoPlayer.setPlaybackSpeed(1.0f)
+
+            podcastViewModel.podcastRepository = PodcastRepository(appDatabase.podcastDao())
             val downloadIndex = PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex
 
             PodcastUtils.getDownloadTracker(LocalContext.current).addListener {
@@ -197,11 +199,8 @@ fun PodCastNavHost(
                         ), "UTF8"
                     )
                 )
-
-            PodcastPlayerComposable(player).showPlayer(
-                URLDecoder.decode(it.arguments?.getString(TITLE), "UTF8"),
-                download
-            )
+            podcastViewModel.preparePlayer(download?.request?.toMediaItem(), {})
+            PodcastPlayerComposable(player).showPlayer(URLDecoder.decode(it.arguments?.getString(TITLE), "UTF8"))
         }
     }
 
