@@ -1,6 +1,8 @@
 package dk.mhr.radio8podcast.presentation
 
 import android.content.Context
+import android.content.Intent
+import android.media.session.MediaSession
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
@@ -31,6 +33,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     }
 
+    var session: MediaSession? = null
     var CONTEXT: Context? = null
 
     val playerEventLister = PlayerEventListerUpdated()
@@ -216,5 +219,13 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     data class DataDownload(val download: MutableState<Download>, val startPosition: Long)
 
+
+    class PodcastMediaCallback : MediaSession.Callback() {
+        override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
+            Log.i(DEBUG_LOG, "Somebody hit the mediaButton: $mediaButtonIntent")
+            return true;
+            //return super.onMediaButtonEvent(mediaButtonIntent)
+        }
+    }
 
 }

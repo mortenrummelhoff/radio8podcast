@@ -9,38 +9,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.viewModelScope
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.OutOfQuotaPolicy
-import androidx.work.WorkManager
-import androidx.work.WorkRequest
 import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.Player.EVENT_IS_PLAYING_CHANGED
-import com.google.android.exoplayer2.Player.Listener
-import com.google.android.exoplayer2.offline.Download
-import com.google.android.exoplayer2.ui.StyledPlayerView.SHOW_BUFFERING_NEVER
-import com.google.android.exoplayer2.ui.StyledPlayerView
 import dk.mhr.radio8podcast.R
-import dk.mhr.radio8podcast.data.PodcastEntity
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
-import dk.mhr.radio8podcast.service.PlayerWorker
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class PodcastPlayerComposable(private val player: ExoPlayer) {
 

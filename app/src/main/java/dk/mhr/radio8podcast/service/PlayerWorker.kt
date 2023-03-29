@@ -9,6 +9,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
+import android.media.session.MediaSession
+import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.MutableLiveData
@@ -28,18 +30,19 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
     private val audioManagerManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    private var nextNotificationId: Int = 0
+    private var nextNotificationId: Int = 999
 
-    override suspend fun getForegroundInfo(): ForegroundInfo {
-        Log.i(DEBUG_LOG, "getForegroundInfo called!!!" + notificationManager.notificationChannels)
-
+    init{
+        Log.i(DEBUG_LOG, "Create notificationChannel")
         val importance = NotificationManager.IMPORTANCE_DEFAULT
         val channel = NotificationChannel("Channel1", "Podcast", importance)
         channel.description = "PodcastPlayerChannel"
+        notificationManager.createNotificationChannel(channel)
+    }
 
-        notificationManager.createNotificationChannel(channel);
-
-        return createForegroundInfo(0, "")
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        Log.i(DEBUG_LOG, "getForegroundInfo called!!!" + notificationManager.notificationChannels)
+        return createForegroundInfo(0, "Loading")
     }
 
     private fun createNotification(currentPosition: Long, mediaId: String?): Notification {
@@ -67,13 +70,12 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
     override suspend fun doWork(): Result {
         Log.i(DEBUG_LOG, "Start work for active player keeping it from sleep")
 
-        //setForeground(createForegroundInfo(podcastViewModel.player!!.currentPosition, podcastViewModel.player!!.currentMediaItem!!.mediaId))
+        podcastViewModel.session?.isActive = true
 
         val isPlaying = MutableLiveData(true)
         val mediaItem = MutableLiveData<MediaItem>()
         val currentPosition = MutableLiveData<Long>(0)
-        //setForeground(createForegroundInfo(currentPosition.value, mediaItem.value?.mediaId))
-        var hasNotifyed = false
+
         while (isPlaying.value!!) {
 
             runBlocking {
@@ -83,19 +85,19 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
                     currentPosition.value = podcastViewModel.player!!.currentPosition
                 }
             }
-            if (!hasNotifyed) {
-                hasNotifyed = true
-                setForeground(createForegroundInfo(currentPosition.value, mediaItem.value?.mediaId))
-            }
-
+            notificationManager.notify(nextNotificationId, createNotification(currentPosition.value!!, mediaItem.value?.mediaId))
             delay(5000)
         }
         Log.i(DEBUG_LOG, "Finish work for active player allowing to go to sleep")
+        podcastViewModel.session?.isActive = false
         return Result.success()
     }
 
     private fun createForegroundInfo(currentPosition: Long?, mediaId: String?): ForegroundInfo {
         Log.i(DEBUG_LOG, "createForegroundInfo called: $currentPosition, mediaId: $mediaId")
-        return ForegroundInfo(nextNotificationId++, createNotification(currentPosition!!, mediaId))
+        return ForegroundInfo(nextNotificationId, createNotification(currentPosition!!, mediaId))
     }
+
+
+
 }

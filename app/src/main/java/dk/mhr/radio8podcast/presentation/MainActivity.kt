@@ -3,6 +3,7 @@ package dk.mhr.radio8podcast.presentation
 //import androidx.compose.foundation.interaction.collectIsPressedAsState
 
 import android.content.Context
+import android.media.session.MediaSession
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -47,6 +48,7 @@ import dk.mhr.radio8podcast.presentation.navigation.DOWNLOAD_ID
 import dk.mhr.radio8podcast.presentation.navigation.Screen
 import dk.mhr.radio8podcast.presentation.navigation.TITLE
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
+import dk.mhr.radio8podcast.service.PlayerWorker
 import dk.mhr.radio8podcast.service.PodcastDownloadService
 import dk.mhr.radio8podcast.service.PodcastService
 import dk.mhr.radio8podcast.service.PodcastUtils
@@ -80,6 +82,9 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
         super.onCreate(savedInstanceState)
 
         setContent {
+
+
+
             podcastViewModel.CONTEXT = this
             podcastViewModel.player = exoPlayer
             exoPlayer.removeListener(podcastViewModel.playerEventLister)
@@ -93,6 +98,10 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
             PodcastUtils.getDownloadTracker(LocalContext.current).addListener {
                 podcastViewModel.fetchDownloadList(downloadIndex)
             }
+            podcastViewModel.session = MediaSession(podcastViewModel.CONTEXT!!, "PodcastService").apply {
+                setCallback(PodcastViewModel.PodcastMediaCallback())
+            }
+
             Log.i(DEBUG_LOG, "Oncreate called we have player: $exoPlayer")
             PodCastNavHost("WearApp", this, this, exoPlayer)
         }
