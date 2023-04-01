@@ -13,6 +13,7 @@ import android.media.session.MediaSession
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.MutableLiveData
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -55,8 +56,8 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
             .setContentText(podcastViewModel.formatLength(currentPosition))
             .setSmallIcon(R.drawable.music_note)
             .setOngoing(true)
-            .setContentIntent(PendingIntent.getActivity(podcastViewModel.CONTEXT, 0,
-                Intent.makeMainActivity(ComponentName(podcastViewModel.CONTEXT!!, MainActivity::class.java)),
+            .setContentIntent(PendingIntent.getActivity(applicationContext, 0,
+                Intent.makeMainActivity(ComponentName(applicationContext, MainActivity::class.java)),
                 PendingIntent.FLAG_IMMUTABLE))
             // Add the cancel action to the notification which can
             // be used to cancel the worker
@@ -70,7 +71,7 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
     override suspend fun doWork(): Result {
         Log.i(DEBUG_LOG, "Start work for active player keeping it from sleep")
 
-        podcastViewModel.session?.isActive = true
+
 
         val isPlaying = MutableLiveData(true)
         val mediaItem = MutableLiveData<MediaItem>()
@@ -89,7 +90,7 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
             delay(5000)
         }
         Log.i(DEBUG_LOG, "Finish work for active player allowing to go to sleep")
-        podcastViewModel.session?.isActive = false
+
         return Result.success()
     }
 

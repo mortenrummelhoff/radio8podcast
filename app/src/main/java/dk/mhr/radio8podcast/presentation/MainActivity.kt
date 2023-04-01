@@ -74,17 +74,17 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
                 )
             )
         ).build()
-
     }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
+
         setContent {
 
-
-
+            podcastViewModel.LIFECYCLEOWNER = this
             podcastViewModel.CONTEXT = this
             podcastViewModel.player = exoPlayer
             exoPlayer.removeListener(podcastViewModel.playerEventLister)
@@ -98,221 +98,22 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
             PodcastUtils.getDownloadTracker(LocalContext.current).addListener {
                 podcastViewModel.fetchDownloadList(downloadIndex)
             }
-            podcastViewModel.session = MediaSession(podcastViewModel.CONTEXT!!, "PodcastService").apply {
-                setCallback(PodcastViewModel.PodcastMediaCallback())
-            }
 
             Log.i(DEBUG_LOG, "Oncreate called we have player: $exoPlayer")
-            PodCastNavHost("WearApp", this, this, exoPlayer)
-        }
-    }
-}
-
-@Composable
-fun PodCastNavHost(
-    startDestination: String = "WearApp",
-    lifecycleOwner: LifecycleOwner,
-    context: Context,
-    player: ExoPlayer,
-    modifier: Modifier = Modifier
-) {
-
-    val navController = rememberSwipeDismissableNavController()
-    val API_KEY = stringResource(R.string.api_key)
-
-
-    SwipeDismissableNavHost(
-        //modifier = modifier,
-        navController = navController,
-        startDestination = startDestination
-    ) {
-        composable(Screen.Landing.route) {
-            WearApp(onNavigateToFetchPodcast = {
-                Log.i(DEBUG_LOG, "Calling navigate to ShowPodcasts")
-                navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
-            },
-                onNavigateToSeeDownloadList = {
-                    podcastViewModel.fetchDownloadList(PodcastUtils.getDownloadManager(context).downloadIndex)
-                    navController.navigate(Screen.SeeDownloads.route)
-                },
-                onPodCastListen = { downloadId, title ->
-                    Log.i("MHR", "DownloadId: $downloadId")
-                    navController.navigate(
-                        route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(
-                            downloadId,
-                            "UTF8"
-                        ) + "/" + URLEncoder.encode(
-                            title,
-                            "UTF8"
-                        )
-                    ) { popUpTo(Screen.SeeDownloads.route) }
-                }
-            )
-
-        }
-        composable(Screen.ShowPodcast.route) {
-            //Log.i(DEBUG_LOG, "backStackEntry: ${it.destination}")
-            PodcastListComposable().ShowPodcastList(onPodCastDownload = { title, link, audio ->
-                Log.i(DEBUG_LOG, "Download Podcast clicked!: $title, Link: $link, audio: $audio")
-
-                val downloadRequest: DownloadRequest =
-                    DownloadRequest.Builder(title, Uri.parse(audio)).setData(
-                        title.encodeToByteArray()
-                    ).build()
-
-                DownloadService.sendAddDownload(
-                    context,
-                    PodcastDownloadService::class.java,
-                    downloadRequest,
-                    false
-                )
-
-            }, lifecycleOwner)
-        }
-        composable(Screen.SeeDownloads.route) {
-            SeeDownloadListComposable(
-                PodcastUtils.getDownloadTracker(LocalContext.current),
-                PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex,
-                lifecycleOwner
-            ).SeeDownloadList(onPodCastListen = { downloadId, title ->
-                Log.i("MHR", "DownloadId: $downloadId")
-                navController.navigate(
-                    route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(
-                        downloadId,
-                        "UTF8"
-                    ) + "/" + URLEncoder.encode(
-                        title,
-                        "UTF8"
-                    )
-                ) { popUpTo(Screen.SeeDownloads.route) }
-            }, onPodCastDelete = { download ->
-                Log.i("MHR", "Now delete download: ${download.download.value.request.id}")
-
-
-                PodcastUtils.getDownloadManager(context)
-                    .removeDownload(download.download.value.request.id)
-            }, context)
-        }
-        composable(
-            route = Screen.PodcastPlayer.route + "/{" + DOWNLOAD_ID + "}/{" + TITLE + "}",
-            arguments = listOf(
-                navArgument(DOWNLOAD_ID) { NavType.StringType },
-                navArgument(TITLE) { NavType.StringType })
-
-        ) {
-            val download =
-                PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex.getDownload(
-                    URLDecoder.decode(
-                        it.arguments?.getString(
-                            DOWNLOAD_ID
-                        ), "UTF8"
-                    )
-                )
-            podcastViewModel.preparePlayer(download?.request?.toMediaItem(), {})
-            PodcastPlayerComposable(player).showPlayer(URLDecoder.decode(it.arguments?.getString(TITLE), "UTF8"))
+            PodcastNavHostComposable().PodCastNavHost("WearApp", this, this, exoPlayer)
         }
     }
 
-}
-
-@Composable
-fun WearApp(
-    onNavigateToFetchPodcast: () -> Unit,
-    onNavigateToSeeDownloadList: () -> Unit,
-    onPodCastListen: (downloadId: String, title: String) -> Unit
-) {
-
-    val padding = 6.dp
-    Log.i("MHR", "WearApp called")
-    Radio8podcastTheme {
-        /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
-         * version of LazyColumn for wear devices with some added features. For more information,
-         * see d.android.com/wear/compose.
-         */
-        Column(
-            modifier = Modifier
-                .captionBarPadding().fillMaxSize()
-                .background(MaterialTheme.colors.background)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Chip(onClick = onNavigateToFetchPodcast,
-                colors = ChipDefaults.chipColors(contentColor = MaterialTheme.colors.background),
-                modifier = Modifier.clickable { Log.i("MHR", "We have click!!") },
-                label = {
-                    Text(text = "Undskyld vi roder")
-                },
-                secondaryLabel = {
-                    Text("Click to fetch")
-                }
-            )
-            Spacer(Modifier.size(padding))
-            Chip(onClick = onNavigateToSeeDownloadList,
-                colors = ChipDefaults.chipColors(contentColor = MaterialTheme.colors.background),
-                label = {
-                    Text(text = "Downloads")
-                },
-                secondaryLabel = {
-                    //Log.i("MHR", "secondaryLabel->" + podcastViewModel.podcasts.value)
-                    Text("Click to see")
-                }
-            )
-
-            val currentlyPlaying = remember { mutableStateOf<PodcastEntity?>(null) }
-
-            LaunchedEffect(Unit) {
-                podcastViewModel.viewModelScope.launch {
-                    withContext(Dispatchers.IO) {
-                        podcastViewModel.podcastRepository.podcastDao.findCurrentPlaying().let {
-                            it.let {
-                                currentlyPlaying.value = it
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (currentlyPlaying.value != null) {
-                Spacer(Modifier.size(padding))
-
-                Chip(
-                    modifier = Modifier.padding(start = 0.dp),
-                    colors = ChipDefaults.chipColors(
-                        contentColor = MaterialTheme.colors.onSurface,
-                        backgroundColor = MaterialTheme.colors.background
-                    ),
-                    onClick = {
-                        onPodCastListen(
-                            currentlyPlaying.value!!.url!!,
-                            currentlyPlaying.value!!.url!!
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = currentlyPlaying.value!!.url!!,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            textAlign = TextAlign.Center
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.music_note),
-                            contentDescription = "PlayButton",
-                            modifier = Modifier.size(ChipDefaults.SmallIconSize)
-                                .padding(start = 0.dp)
-                                .wrapContentSize(align = Alignment.Center)
-                        )
-                    }
-                )
 
 
-            }
+    override fun onDestroy() {
+        Log.i(DEBUG_LOG, "onDestroy called. Releasing components")
+        //if ()
 
-            //Greeting(greetingName = greetingName)
-            //FetchPodcasts(onNavigateToFetchPodcast, onNavigateToSeeDownloadList)
-        }
-
+        //exoPlayer.stop()
+        //exoPlayer.release()
+        //podcastViewModel.session?.release()
+        super.onDestroy()
     }
+
 }

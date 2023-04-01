@@ -1,6 +1,7 @@
 package dk.mhr.radio8podcast.presentation
 
 
+import android.media.session.MediaSession
 import android.util.Log
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -77,10 +78,17 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                             "Checked: $checked" + ", hasNextMediaItem: " + player.hasNextMediaItem()
                         )
                         if (checked) {
+
+                            podcastViewModel.session = MediaSession(podcastViewModel.CONTEXT!!, "PodcastService").apply {
+                                setCallback(PodcastViewModel.PodcastMediaCallback())
+                            }
+                            podcastViewModel.session?.isActive = true
+
                             player.play()
 
                         } else {
                             player.pause()
+                            podcastViewModel.session?.isActive = false
                         }
 
                     },

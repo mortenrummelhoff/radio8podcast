@@ -6,6 +6,8 @@ import android.media.session.MediaSession
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.OneTimeWorkRequestBuilder
@@ -33,6 +35,8 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     }
 
+
+    var LIFECYCLEOWNER: LifecycleOwner? = null
     var session: MediaSession? = null
     var CONTEXT: Context? = null
 
@@ -151,8 +155,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
                         val playerWorkRequest: WorkRequest =
                             OneTimeWorkRequestBuilder<PlayerWorker>().setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                                 .build()
-                        WorkManager.getInstance(podcastViewModel.CONTEXT!!)
-                            .enqueue(playerWorkRequest)
+                        WorkManager.getInstance(podcastViewModel.CONTEXT!!).enqueue(playerWorkRequest)
 
                     }
                 }
