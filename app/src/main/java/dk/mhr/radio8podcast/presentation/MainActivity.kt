@@ -66,31 +66,13 @@ val DEBUG_LOG = "MHR";
 class MainActivity : ComponentActivity(), LifecycleOwner {
 
     private val appDatabase by lazy { AppDatabase.getDatabase(this) }
-    private val exoPlayer by lazy {
-        ExoPlayer.Builder(this).setMediaSourceFactory(
-            DefaultMediaSourceFactory(this).setDataSourceFactory(
-                PodcastUtils.getDataSourceFactory(
-                    this
-                )
-            )
-        ).build()
-    }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
-
         setContent {
-
             podcastViewModel.LIFECYCLEOWNER = this
             podcastViewModel.CONTEXT = this
-            podcastViewModel.player = exoPlayer
-            exoPlayer.removeListener(podcastViewModel.playerEventLister)
-            exoPlayer.addListener(podcastViewModel.playerEventLister)
-            exoPlayer.experimentalSetOffloadSchedulingEnabled(true)
-            exoPlayer.setPlaybackSpeed(1.0f)
+            podcastViewModel.initializePlayer(this)
 
             podcastViewModel.podcastRepository = PodcastRepository(appDatabase.podcastDao())
             val downloadIndex = PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex
@@ -99,20 +81,35 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
                 podcastViewModel.fetchDownloadList(downloadIndex)
             }
 
-            Log.i(DEBUG_LOG, "Oncreate called we have player: $exoPlayer")
-            PodcastNavHostComposable().PodCastNavHost("WearApp", this, this, exoPlayer)
+            Log.i(DEBUG_LOG, "Oncreate called we have player: ${podcastViewModel.player}")
+            PodcastNavHostComposable().PodCastNavHost("WearApp", this, this)
         }
     }
 
+    override fun onResume() {
+        Log.i(DEBUG_LOG, "onResume called!!")
+        if (podcastViewModel.player?.isPlaying == false) {
+            Log.i(DEBUG_LOG, "Player is not playing and properly released. initialize new player")
+            podcastViewModel.initializePlayer(this)
+        }
+        super.onResume()
+    }
 
+    override fun onPause() {
+        Log.i(DEBUG_LOG, "onPause called!!")
+
+        if (podcastViewModel.player?.isPlaying == false) {
+            Log.i(DEBUG_LOG, "Player is not playing. Release it")
+            podcastViewModel.player?.release()
+            podcastViewModel.session?.release()
+        }
+        super.onPause()
+    }
 
     override fun onDestroy() {
         Log.i(DEBUG_LOG, "onDestroy called. Releasing components")
-        //if ()
-
-        //exoPlayer.stop()
-        //exoPlayer.release()
-        //podcastViewModel.session?.release()
+        podcastViewModel.player?.release()
+        podcastViewModel.session?.release()
         super.onDestroy()
     }
 

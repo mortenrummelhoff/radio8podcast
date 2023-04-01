@@ -19,10 +19,12 @@ import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.offline.Download
 import com.google.android.exoplayer2.offline.DownloadIndex
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import dk.mhr.radio8podcast.data.PodcastEntity
 import dk.mhr.radio8podcast.data.PodcastRepository
 import dk.mhr.radio8podcast.service.PlayerWorker
 import dk.mhr.radio8podcast.service.PodcastService
+import dk.mhr.radio8podcast.service.PodcastUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,6 +55,23 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     var loadingState = false
 
+
+    fun initializePlayer(context: Context) {
+        val exoPlayer by lazy {
+            ExoPlayer.Builder(context).setMediaSourceFactory(
+                DefaultMediaSourceFactory(context).setDataSourceFactory(
+                    PodcastUtils.getDataSourceFactory(context)
+                )
+            ).build()
+        }
+
+        exoPlayer.removeListener(podcastViewModel.playerEventLister)
+        exoPlayer.addListener(podcastViewModel.playerEventLister)
+        exoPlayer.experimentalSetOffloadSchedulingEnabled(true)
+        exoPlayer.setPlaybackSpeed(1.0f)
+        player = exoPlayer
+
+    }
 
     fun formatLength(totalSecs: Long): String {
         val hours = totalSecs / 1000 / 3600;

@@ -24,7 +24,7 @@ import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import kotlinx.coroutines.delay
 
-class PodcastPlayerComposable(private val player: ExoPlayer) {
+class PodcastPlayerComposable() {
 
     @Composable
     fun showPlayer(title: String?) {
@@ -47,12 +47,12 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
         LaunchedEffect(Unit) {
             while (true) {
                 contentPositionString =
-                    podcastViewModel.formatLength(totalSecs = player.contentPosition)
+                    podcastViewModel.formatLength(totalSecs = podcastViewModel.player?.contentPosition!!)
                 //save duration to state
                 delay(1000)
 
-                if (!player.isLoading) {
-                    durationString = podcastViewModel.formatLength(player.duration)
+                if (!podcastViewModel.player?.isLoading!!) {
+                    durationString = podcastViewModel.formatLength(podcastViewModel.player?.duration!!)
                 }
             }
         }
@@ -75,7 +75,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                         checked = !checked
                         Log.i(
                             DEBUG_LOG,
-                            "Checked: $checked" + ", hasNextMediaItem: " + player.hasNextMediaItem()
+                            "Checked: $checked" + ", hasNextMediaItem: " + podcastViewModel.player?.hasNextMediaItem()
                         )
                         if (checked) {
 
@@ -84,10 +84,10 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                             }
                             podcastViewModel.session?.isActive = true
 
-                            player.play()
+                            podcastViewModel.player?.play()
 
                         } else {
-                            player.pause()
+                            podcastViewModel.player?.pause()
                             podcastViewModel.session?.isActive = false
                         }
 
@@ -118,14 +118,14 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                 Row {
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "-15s")
-                        player.seekTo(player.currentPosition - 15000)
+                        podcastViewModel.player?.seekTo(podcastViewModel.player?.currentPosition!! - 15000)
                     }) {
                         Text("-15s")
                     }
                     Spacer(Modifier.padding(30.dp, 4.dp, 30.dp, 4.dp))
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "+15s")
-                        player.seekTo(player.currentPosition + 15000)
+                        podcastViewModel.player?.seekTo(podcastViewModel.player?.currentPosition!! + 15000)
                     }) {
                         Text("+15s")
                     }
@@ -134,7 +134,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                 Row {
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "DecreaseVol called")
-                        player.decreaseDeviceVolume()
+                        podcastViewModel.player?.decreaseDeviceVolume()
                     }) {
                         Icon(
                             contentDescription = stringResource(R.string.decreateVolume),
@@ -147,7 +147,7 @@ class PodcastPlayerComposable(private val player: ExoPlayer) {
                     Spacer(Modifier.padding(4.dp, 0.dp, 0.dp, 4.dp))
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "IncreaseVol called")
-                        player.increaseDeviceVolume()
+                        podcastViewModel.player?.increaseDeviceVolume()
                     }) {
                         Icon(
                             contentDescription = stringResource(R.string.increateVolume),

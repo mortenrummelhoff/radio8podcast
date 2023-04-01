@@ -31,9 +31,7 @@ class PodcastNavHostComposable {
     fun PodCastNavHost(
         startDestination: String = "WearApp",
         lifecycleOwner: LifecycleOwner,
-        context: Context,
-        player: ExoPlayer,
-        modifier: Modifier = Modifier
+        context: Context
     ) {
 
         val navController = rememberSwipeDismissableNavController()
@@ -128,7 +126,7 @@ class PodcastNavHostComposable {
                         )
                     )
                 podcastViewModel.preparePlayer(download?.request?.toMediaItem(), {})
-                PodcastPlayerComposable(player).showPlayer(
+                PodcastPlayerComposable().showPlayer(
                     URLDecoder.decode(it.arguments?.getString(
                         TITLE
                     ), "UTF8"))

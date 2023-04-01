@@ -35,7 +35,6 @@ class PodcastLandingComposable {
     ) {
 
         val padding = 6.dp
-        Log.i("MHR", "WearApp called")
         Radio8podcastTheme {
             /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
              * version of LazyColumn for wear devices with some added features. For more information,
