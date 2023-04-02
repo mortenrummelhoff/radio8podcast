@@ -9,23 +9,21 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
-import android.media.session.MediaSession
-import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.MutableLiveData
+import androidx.media3.common.MediaItem
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
-import com.google.android.exoplayer2.MediaItem
+//import com.google.android.exoplayer2.MediaItem
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.DEBUG_LOG
 import dk.mhr.radio8podcast.presentation.MainActivity
 import dk.mhr.radio8podcast.presentation.podcastViewModel
 import kotlinx.coroutines.*
 
-class PlayerWorker(context: Context, workerParameters: WorkerParameters):
+class PlayerForegroundWorker(context: Context, workerParameters: WorkerParameters):
     CoroutineWorker(context, workerParameters) {
 
     private val audioManagerManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager

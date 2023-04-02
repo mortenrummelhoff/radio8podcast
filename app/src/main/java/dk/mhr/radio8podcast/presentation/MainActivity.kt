@@ -69,6 +69,7 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
         setInputData(workDataOf("" to "")).addTag("find_currently_played").build()
         WorkManager.getInstance(applicationContext).enqueue(findCurrentlyPlayedWorkRequest)
 
+
         super.onResume()
     }
 

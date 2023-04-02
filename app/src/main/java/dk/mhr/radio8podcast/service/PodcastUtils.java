@@ -16,21 +16,38 @@ package dk.mhr.radio8podcast.service;
  */
 
 import android.content.Context;
-import com.google.android.exoplayer2.DefaultRenderersFactory;
-import com.google.android.exoplayer2.RenderersFactory;
-import com.google.android.exoplayer2.database.DatabaseProvider;
-import com.google.android.exoplayer2.database.StandaloneDatabaseProvider;
-import com.google.android.exoplayer2.ext.cronet.CronetDataSource;
-import com.google.android.exoplayer2.ext.cronet.CronetUtil;
-import com.google.android.exoplayer2.offline.DownloadManager;
-import com.google.android.exoplayer2.ui.DownloadNotificationHelper;
-import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.upstream.DefaultDataSource;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
-import com.google.android.exoplayer2.upstream.cache.Cache;
-import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
-import com.google.android.exoplayer2.upstream.cache.NoOpCacheEvictor;
-import com.google.android.exoplayer2.upstream.cache.SimpleCache;
+
+import androidx.media3.database.DatabaseProvider;
+import androidx.media3.database.StandaloneDatabaseProvider;
+import androidx.media3.datasource.DataSource;
+import androidx.media3.datasource.DefaultDataSource;
+import androidx.media3.datasource.DefaultHttpDataSource;
+import androidx.media3.datasource.cache.Cache;
+import androidx.media3.datasource.cache.CacheDataSource;
+import androidx.media3.datasource.cache.NoOpCacheEvictor;
+import androidx.media3.datasource.cache.SimpleCache;
+import androidx.media3.datasource.cronet.CronetDataSource;
+import androidx.media3.datasource.cronet.CronetUtil;
+import androidx.media3.exoplayer.DefaultRenderersFactory;
+import androidx.media3.exoplayer.RenderersFactory;
+import androidx.media3.exoplayer.offline.DownloadManager;
+import androidx.media3.exoplayer.offline.DownloadNotificationHelper;
+//
+//import com.google.android.exoplayer2.DefaultRenderersFactory;
+//import com.google.android.exoplayer2.RenderersFactory;
+//import com.google.android.exoplayer2.database.DatabaseProvider;
+//import com.google.android.exoplayer2.database.StandaloneDatabaseProvider;
+//import com.google.android.exoplayer2.ext.cronet.CronetDataSource;
+//import com.google.android.exoplayer2.ext.cronet.CronetUtil;
+//import com.google.android.exoplayer2.offline.DownloadManager;
+//import com.google.android.exoplayer2.ui.DownloadNotificationHelper;
+//import com.google.android.exoplayer2.upstream.DataSource;
+//import com.google.android.exoplayer2.upstream.DefaultDataSource;
+//import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
+//import com.google.android.exoplayer2.upstream.cache.Cache;
+//import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
+//import com.google.android.exoplayer2.upstream.cache.NoOpCacheEvictor;
+//import com.google.android.exoplayer2.upstream.cache.SimpleCache;
 import java.io.File;
 import java.net.CookieHandler;
 import java.net.CookieManager;
@@ -58,12 +75,12 @@ public final class PodcastUtils {
 
     private static DataSource.Factory dataSourceFactory;
     private static DataSource.Factory httpDataSourceFactory;
-    private static  DatabaseProvider databaseProvider;
+    private static DatabaseProvider databaseProvider;
     private static  File downloadDirectory;
-    private static  Cache downloadCache;
-    private static  DownloadManager downloadManager;
+    private static Cache downloadCache;
+    private static DownloadManager downloadManager;
     private static  PodcastDownloadTracker downloadTracker;
-    private static  DownloadNotificationHelper downloadNotificationHelper;
+    private static DownloadNotificationHelper downloadNotificationHelper;
 
     /** Returns whether extension renderers should be used. */
     public static boolean useExtensionRenderers() {

@@ -3,11 +3,11 @@ package dk.mhr.radio8podcast.presentation
 
 import android.content.Context
 import android.media.AudioManager
-import android.media.MediaMetadata
-import android.media.session.MediaSession
-import android.media.session.PlaybackState
-import android.support.v4.media.MediaMetadataCompat
+//import android.media.session.MediaSession
+import androidx.media3.session.MediaSession
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,7 +15,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -25,7 +24,6 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
-
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import kotlinx.coroutines.delay
@@ -97,6 +95,29 @@ class PodcastPlayerComposable(val context:Context) {
                                     AudioManager.AUDIOFOCUS_REQUEST_FAILED -> false
                                     AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
                                         Log.i(DEBUG_LOG, "AudioFocus granted. Now I start player")
+
+//                                        podcastViewModel.session = MediaSession(context, "PodcastService").apply {
+//                                            setCallback(PodcastViewModel.PodcastMediaCallback())
+//                                            setMetadata(MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, "Her kommer pipi")
+//                                                .putString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI, "https://production.listennotes.com/podcasts/star-wars-7x7-the-daily-star-wars-podcast-HN08OoDE7pc-AIg3cZVKCsL.1400x1400.jpg")
+//                                                .putString(MediaMetadata.METADATA_KEY_ARTIST, "Artist pipi").build())
+//                                            setSessionActivity(PendingIntent.getActivity(context, 0,
+//                                                Intent.makeMainActivity(ComponentName(context, MainActivity::class.java)),
+//                                                PendingIntent.FLAG_IMMUTABLE))
+//                                            //controller.
+//
+//
+//                                            setPlaybackState(PlaybackState.Builder().setState(PlaybackState.STATE_PLAYING, 0, 1f)
+//                                            .setActions(
+//                                                PlaybackState.ACTION_PLAY
+//                                                    or PlaybackState.ACTION_PLAY_PAUSE
+//                                                    or PlaybackState.ACTION_SKIP_TO_NEXT
+//                                                    or PlaybackState.ACTION_SKIP_TO_PREVIOUS).build())
+//                                            isActive = true
+//
+//                                        }
+
+
                                         podcastViewModel.player?.play()
 
                                         true
@@ -110,17 +131,8 @@ class PodcastPlayerComposable(val context:Context) {
                             }
 
 
-                            podcastViewModel.session = MediaSession(context, "PodcastService").apply {
-                                setCallback(PodcastViewModel.PodcastMediaCallback())
-                                setMetadata(MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, "Her kommer pipi")
-                                    .putString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI, "https://production.listennotes.com/podcasts/star-wars-7x7-the-daily-star-wars-podcast-HN08OoDE7pc-AIg3cZVKCsL.1400x1400.jpg")
-                                    .putString(MediaMetadata.METADATA_KEY_ARTIST, "Artist pipi").build())
 
-                                //controller.
-                                setPlaybackState(PlaybackState.Builder().setState(PlaybackState.STATE_PLAYING, 0, 1f).build())
-                                isActive = true
-
-                            }
+                            //podcastViewModel.session?.controller?.
 //                            podcastViewModel.session?.isActive = true
 //                            val mediaMetadata = MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, "Her kommer pipi").build()
 //                            podcastViewModel.session?.setMetadata(mediaMetadata)
@@ -129,7 +141,7 @@ class PodcastPlayerComposable(val context:Context) {
 
                         } else {
                             podcastViewModel.player?.pause()
-                            podcastViewModel.session?.isActive = false
+                            //podcastViewModel.session?.isActive = false
                         }
 
                     },

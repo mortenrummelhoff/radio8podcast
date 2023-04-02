@@ -21,6 +21,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
+import androidx.media3.exoplayer.offline.Download.*
+import androidx.media3.exoplayer.offline.DownloadIndex
 import androidx.wear.compose.material.*
 import androidx.wear.compose.material.dialog.Alert
 import androidx.wear.compose.material.dialog.Dialog
@@ -28,9 +30,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.workDataOf
-import com.google.android.exoplayer2.offline.Download
-import com.google.android.exoplayer2.offline.Download.*
-import com.google.android.exoplayer2.offline.DownloadIndex
+
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import dk.mhr.radio8podcast.service.PodcastDownloadTracker

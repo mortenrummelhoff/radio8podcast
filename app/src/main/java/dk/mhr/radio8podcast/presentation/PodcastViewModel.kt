@@ -2,31 +2,41 @@ package dk.mhr.radio8podcast.presentation
 
 import android.content.Context
 import android.content.Intent
+
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.AudioManager.OnAudioFocusChangeListener
-import android.media.session.MediaSession
-import android.service.autofill.OnClickAction
+
+//import android.media.session.MediaSession
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.offline.Download
+import androidx.media3.exoplayer.offline.DownloadIndex
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.session.MediaSession
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.offline.Download
-import com.google.android.exoplayer2.offline.DownloadIndex
-import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
+import com.google.common.util.concurrent.ListenableFuture
+//import com.google.android.exoplayer2.ExoPlayer
+
+//import com.google.android.exoplayer2.ExoPlayer
+//import com.google.android.exoplayer2.MediaItem
+
+//import com.google.android.exoplayer2.offline.Download
+//import com.google.android.exoplayer2.offline.DownloadIndex
+//import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import dk.mhr.radio8podcast.data.PodcastEntity
 import dk.mhr.radio8podcast.data.PodcastRepository
-import dk.mhr.radio8podcast.service.PlayerWorker
+import dk.mhr.radio8podcast.service.PlayerForegroundWorker
 import dk.mhr.radio8podcast.service.PodcastService
 import dk.mhr.radio8podcast.service.PodcastUtils
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +57,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     var LIFECYCLEOWNER: LifecycleOwner? = null
     var session: MediaSession? = null
 
-    var player: ExoPlayer? = null
+    var player: Player? = null
 
     //lateinit var podcastDao:PodcastDao
     lateinit var podcastRepository: PodcastRepository
@@ -76,6 +86,10 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         exoPlayer.experimentalSetOffloadSchedulingEnabled(true)
         exoPlayer.setPlaybackSpeed(1.0f)
         player = exoPlayer
+        podcastViewModel.session = MediaSession.Builder(context, player!!).
+        setCallback(PodcastMediaCallback()).build()
+        Log.i(DEBUG_LOG, "Session created!!! Token: " + podcastViewModel.session?.token)
+
 
     }
 
@@ -132,6 +146,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     }
 
     class PlayerEventListerUpdated(val context: Context) : Player.Listener {
+
         override fun onEvents(player: Player, events: Player.Events) {
             (0 until events.size()).forEach {
                 Log.i(DEBUG_LOG, "onEvents called: $player Event: ${events.get(it)}")
@@ -178,7 +193,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
                         Log.i(DEBUG_LOG, "Player started. Create and start PlayerWorkRequest!")
 
                         val playerWorkRequest: WorkRequest =
-                            OneTimeWorkRequestBuilder<PlayerWorker>().setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                            OneTimeWorkRequestBuilder<PlayerForegroundWorker>().setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                                 .build()
                         WorkManager.getInstance(context).enqueue(playerWorkRequest)
 
@@ -253,15 +268,64 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     data class DataDownload(val download: MutableState<Download>, val startPosition: Long)
 
 
-    class PodcastMediaCallback : MediaSession.Callback() {
-        override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
-            Log.i(DEBUG_LOG, "Somebody hit the mediaButton: $mediaButtonIntent")
-
-            mediaButtonIntent.action
-
-            return true;
-            //return super.onMediaButtonEvent(mediaButtonIntent)
+    class PodcastMediaCallback : MediaSession.Callback {
+        override fun onPlayerCommandRequest(
+            session: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            playerCommand: Int
+        ): Int {
+            Log.i(DEBUG_LOG, "playerCommandRequest: " +playerCommand)
+            return super.onPlayerCommandRequest(session, controller, playerCommand)
         }
+
+        override fun onConnect(
+            session: MediaSession,
+            controller: MediaSession.ControllerInfo
+        ): MediaSession.ConnectionResult {
+            Log.i(DEBUG_LOG, "onConnect called")
+            return super.onConnect(session, controller)
+        }
+
+        override fun onDisconnected(
+            session: MediaSession,
+            controller: MediaSession.ControllerInfo
+        ) {
+            Log.i(DEBUG_LOG, "onDisconnected called")
+            super.onDisconnected(session, controller)
+        }
+
+        override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
+            Log.i(DEBUG_LOG, "onPostConnect called")
+            super.onPostConnect(session, controller)
+        }
+
+        override fun onSetMediaItems(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            mediaItems: MutableList<MediaItem>,
+            startIndex: Int,
+            startPositionMs: Long
+        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+            Log.i(DEBUG_LOG, "onSetMediaItems : $mediaItems")
+            return super.onSetMediaItems(
+                mediaSession,
+                controller,
+                mediaItems,
+                startIndex,
+                startPositionMs
+            )
+        }
+
+//        override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
+//            Log.i(DEBUG_LOG, "Somebody hit the mediaButton: $mediaButtonIntent")
+//
+//            mediaButtonIntent.action
+//
+//            return true;
+//            //return super.onMediaButtonEvent(mediaButtonIntent)
+//        }
+
+
     }
 
     class PodcastAudioFocusChange: OnAudioFocusChangeListener {

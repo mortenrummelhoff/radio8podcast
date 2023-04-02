@@ -4,18 +4,18 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+//import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LifecycleOwner
+import androidx.media3.exoplayer.offline.DownloadRequest
+import androidx.media3.exoplayer.offline.DownloadService
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.offline.DownloadRequest
-import com.google.android.exoplayer2.offline.DownloadService
+
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.navigation.DOWNLOAD_ID
 import dk.mhr.radio8podcast.presentation.navigation.Screen
