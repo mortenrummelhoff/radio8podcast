@@ -1,6 +1,6 @@
 package dk.mhr.radio8podcast.service
 
-//import androidx.media.app.NotificationCompat
+
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,12 +16,14 @@ import androidx.media3.common.MediaItem
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
-//import com.google.android.exoplayer2.MediaItem
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.DEBUG_LOG
 import dk.mhr.radio8podcast.presentation.MainActivity
 import dk.mhr.radio8podcast.presentation.podcastViewModel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 class PlayerForegroundWorker(context: Context, workerParameters: WorkerParameters):
     CoroutineWorker(context, workerParameters) {

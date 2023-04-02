@@ -97,41 +97,7 @@ class PodcastPlayerComposable(val context:Context) {
                                     AudioManager.AUDIOFOCUS_REQUEST_FAILED -> false
                                     AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
                                         Log.i(DEBUG_LOG, "AudioFocus granted. Now I start player")
-
-//                                        podcastViewModel.session = MediaSession(context, "PodcastService").apply {
-//                                            setCallback(PodcastViewModel.PodcastMediaCallback())
-//                                            setMetadata(MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, "Her kommer pipi")
-//                                                .putString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI, "https://production.listennotes.com/podcasts/star-wars-7x7-the-daily-star-wars-podcast-HN08OoDE7pc-AIg3cZVKCsL.1400x1400.jpg")
-//                                                .putString(MediaMetadata.METADATA_KEY_ARTIST, "Artist pipi").build())
-//                                            setSessionActivity(PendingIntent.getActivity(context, 0,
-//                                                Intent.makeMainActivity(ComponentName(context, MainActivity::class.java)),
-//                                                PendingIntent.FLAG_IMMUTABLE))
-//                                            //controller.
-//
-//
-//                                            setPlaybackState(PlaybackState.Builder().setState(PlaybackState.STATE_PLAYING, 0, 1f)
-//                                            .setActions(
-//                                                PlaybackState.ACTION_PLAY
-//                                                    or PlaybackState.ACTION_PLAY_PAUSE
-//                                                    or PlaybackState.ACTION_SKIP_TO_NEXT
-//                                                    or PlaybackState.ACTION_SKIP_TO_PREVIOUS).build())
-//                                            isActive = true
-//
-//                                        }
-
-
                                         podcastViewModel.player?.play()
-//                                        val controllerFuture = MediaController.Builder(context, podcastViewModel.session?.token!!).buildAsync()
-//                                        controllerFuture.addListener(
-//                                            {
-//                                                Log.i(DEBUG_LOG, "Where is controllerMEdia")
-//                                                val mediaController = controllerFuture.get()
-//                                                mediaController.addListener(PodcastViewModel.PlayerEventListerUpdated(context))
-//
-//                                            },
-//                                            MoreExecutors.directExecutor()
-//                                        )
-
                                         true
                                     }
                                     AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
@@ -142,18 +108,8 @@ class PodcastPlayerComposable(val context:Context) {
                                 }
                             }
 
-
-
-                            //podcastViewModel.session?.controller?.
-//                            podcastViewModel.session?.isActive = true
-//                            val mediaMetadata = MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, "Her kommer pipi").build()
-//                            podcastViewModel.session?.setMetadata(mediaMetadata)
-
-                            //podcastViewModel.player?.play()
-
                         } else {
                             podcastViewModel.player?.pause()
-                            //podcastViewModel.session?.isActive = false
                         }
 
                     },

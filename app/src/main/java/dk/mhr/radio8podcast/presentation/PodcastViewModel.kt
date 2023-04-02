@@ -42,7 +42,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     }
 
 
-    lateinit var exoPlayer: ExoPlayer
+//    lateinit var exoPlayer: ExoPlayer
     var player: MediaController? = null
     lateinit var audioManager: AudioManager
     var focusRequest: AudioFocusRequest? = null
@@ -172,52 +172,6 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         }
     }
 
-    fun preparePlayer(mediaItem: MediaItem?) {
-        Log.i(DEBUG_LOG, "Preparing player for : ${mediaItem?.mediaId}");
-        var startP = 0L
-
-        podcastViewModel.viewModelScope.launch {
-            mediaItem?.let {
-                withContext(Dispatchers.IO) {
-                    val podcastEntity = podcastViewModel.podcastRepository.podcastDao.findByUrl(it.mediaId)
-
-                    if (podcastEntity == null) {
-                        Log.i( DEBUG_LOG,"Podcast does not exist in db for mediaId: ${mediaItem.mediaId} Creating new")
-                        val newPodcastEntity = PodcastEntity(0, mediaItem.mediaId, 0)
-                        podcastViewModel.podcastRepository.podcastDao.insertPodcast(newPodcastEntity)
-                    } else {
-                        Log.i( DEBUG_LOG,"Podcast exist in db for mediaId: ${mediaItem.mediaId} With startPosition: ${podcastEntity.startPosition}")
-                        startP = podcastEntity.startPosition!!
-                        //startP = 0;
-                    }
-                }.let {
-                    if (player?.mediaItemCount == 0) {
-                        mediaItem?.let { player?.setMediaItem(it, startP)
-                            player?.prepare()
-                            Log.i(DEBUG_LOG, "Start play some podcast")
-                        }
-
-                    } else {
-                        if (mediaItem?.mediaId.equals(player?.currentMediaItem?.mediaId)) {
-                            Log.i(DEBUG_LOG,"Player already loaded with same mediaItem: $mediaItem")
-                        } else {
-                            Log.i(DEBUG_LOG, "Player loaded with other mediaItem that selected. Load new into player: $mediaItem")
-                            mediaItem?.let { player?.setMediaItem(it, startP)
-                                player?.prepare()}
-
-                        }
-                    }
-
-                    Log.i(
-                        DEBUG_LOG,
-                        "CurrentMediaItemId " + player?.currentMediaItem?.mediaId + ", contentPosition: " + player?.contentPosition +
-                                ", contentLength: " + player?.contentDuration
-                    )
-                }
-            }
-        }
-    }
-
 //    val onStartAction: () -> Unit = {
 //        Log.i(DEBUG_LOG, "onClick called from compose. And here we have podcastViewMode")
 //    }
@@ -241,96 +195,6 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     data class DataDownload(val download: MutableState<Download>, val startPosition: Long)
 
-
-    class PodcastMediaCallback(val context: Context) : MediaSession.Callback {
-        override fun onPlayerCommandRequest(
-            session: MediaSession,
-            controller: MediaSession.ControllerInfo,
-            playerCommand: Int
-        ): Int {
-            Log.i(DEBUG_LOG, "playerCommandRequest: " +playerCommand)
-            return super.onPlayerCommandRequest(session, controller, playerCommand)
-        }
-
-        override fun onConnect(
-            session: MediaSession,
-            controller: MediaSession.ControllerInfo
-        ): MediaSession.ConnectionResult {
-            Log.i(DEBUG_LOG, "onConnect called")
-            return super.onConnect(session, controller)
-        }
-
-        override fun onDisconnected(
-            session: MediaSession,
-            controller: MediaSession.ControllerInfo
-        ) {
-            Log.i(DEBUG_LOG, "onDisconnected called")
-            super.onDisconnected(session, controller)
-        }
-
-        override fun onPostConnect(session: MediaSession, controller: MediaSession.ControllerInfo) {
-            Log.i(DEBUG_LOG, "onPostConnect called")
-            super.onPostConnect(session, controller)
-        }
-
-        override fun onAddMediaItems(
-            mediaSession: MediaSession,
-            controller: MediaSession.ControllerInfo,
-            mediaItems: MutableList<MediaItem>
-        ): ListenableFuture<MutableList<MediaItem>> {
-            Log.i(DEBUG_LOG, "onAddMediaItems called!!")
-            val download = PodcastUtils.getDownloadManager(context).downloadIndex.getDownload(mediaItems[0].mediaId)
-            val updatedMediaItems: MutableList<MediaItem> = mutableListOf()
-
-            if (download != null) {
-                updatedMediaItems.add(download.request.toMediaItem())
-            }
-
-            //val updatedMediaItems = mediaItems.map { it.buildUpon().setUri(it.mediaId).build() }.toMutableList()
-            return Futures.immediateFuture(updatedMediaItems)
-            //return super.onAddMediaItems(mediaSession, controller, mediaItems)
-        }
-
-        override fun onSetMediaItems(
-            mediaSession: MediaSession,
-            controller: MediaSession.ControllerInfo,
-            mediaItems: MutableList<MediaItem>,
-            startIndex: Int,
-            startPositionMs: Long
-        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
-            Log.i(DEBUG_LOG, "onSetMediaItems : $mediaItems, StartIndex: $startIndex, size: ${mediaItems.size}" )
-
-            val download = PodcastUtils.getDownloadManager(context).downloadIndex.getDownload(mediaItems[startIndex].mediaId)
-            val updatedMediaItems: MutableList<MediaItem> = mutableListOf()
-
-            if (download != null) {
-                updatedMediaItems.add(startIndex, download.request.toMediaItem())
-            }
-
-            //return Futures.immediateFuture()
-
-            return super.onSetMediaItems(
-                mediaSession,
-                controller,
-                updatedMediaItems,
-                startIndex,
-                startPositionMs
-            )
-        }
-
-
-
-//        override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
-//            Log.i(DEBUG_LOG, "Somebody hit the mediaButton: $mediaButtonIntent")
-//
-//            mediaButtonIntent.action
-//
-//            return true;
-//            //return super.onMediaButtonEvent(mediaButtonIntent)
-//        }
-
-
-    }
 
     class PodcastAudioFocusChange: OnAudioFocusChangeListener {
         override fun onAudioFocusChange(p0: Int) {

@@ -88,6 +88,8 @@ public final class PodcastUtils {
         //return BuildConfig.USE_DECODER_EXTENSIONS;
     }
 
+
+
     public static RenderersFactory buildRenderersFactory(
             Context context, boolean preferExtensionRenderer) {
         @DefaultRenderersFactory.ExtensionRendererMode
@@ -98,7 +100,7 @@ public final class PodcastUtils {
                         : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
                         : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
         return new DefaultRenderersFactory(context.getApplicationContext())
-                .setExtensionRendererMode(extensionRendererMode);
+                .setExtensionRendererMode(extensionRendererMode).setEnableAudioOffload(true);
     }
 
     public static synchronized DataSource.Factory getHttpDataSourceFactory(Context context) {

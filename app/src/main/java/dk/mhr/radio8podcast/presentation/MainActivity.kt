@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
     override fun onStart() {
         super.onStart()
         val sessionToken = SessionToken(this, ComponentName(this, PodcastPlayerService::class.java))
-
+        val playerEventLister = PodcastViewModel.PlayerEventListerUpdated(this)
         val controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
         controllerFuture.addListener(
             {
@@ -74,12 +74,10 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
                 val mediaController = controllerFuture.get()
                 Log.i(DEBUG_LOG, "Media Controller initiated!!")
                 podcastViewModel.player = mediaController
-                val playerEventLister = PodcastViewModel.PlayerEventListerUpdated(this)
                 mediaController.removeListener(playerEventLister)
                 mediaController.addListener(playerEventLister)
                 //mediaController.experimentalSetOffloadSchedulingEnabled(true)
                 mediaController.setPlaybackSpeed(1.0f)
-                //mediaController.playWhenReady = true
 
             },
             MoreExecutors.directExecutor()
