@@ -24,6 +24,10 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.wear.compose.material.*
 import androidx.wear.compose.material.dialog.Alert
 import androidx.wear.compose.material.dialog.Dialog
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
+import androidx.work.workDataOf
 import com.google.android.exoplayer2.offline.Download
 import com.google.android.exoplayer2.offline.Download.*
 import com.google.android.exoplayer2.offline.DownloadIndex
@@ -32,6 +36,7 @@ import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import dk.mhr.radio8podcast.service.PodcastDownloadTracker
 import dk.mhr.radio8podcast.service.PodcastDownloadTracker.Listener
 import dk.mhr.radio8podcast.service.PodcastUtils
+import dk.mhr.radio8podcast.service.PodcastWorker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import java.nio.charset.Charset
@@ -57,7 +62,7 @@ class SeeDownloadListComposable(
 
     @Composable
     fun SeeDownloadList(
-        onPodCastListen: (downloadId: String, title: String) -> Unit,
+        onPodCastListen: () -> Unit,
         onPodCastDelete: (download: PodcastViewModel.DataDownload) -> Unit,
         context: Context
     ) {
@@ -143,10 +148,10 @@ class SeeDownloadListComposable(
                     TitleCard(
 
                         onClick = {
-                            onPodCastListen(
-                                download.download.value.request.id,
-                                download.download.value.request.data.toString(Charset.defaultCharset())
-                            )
+                            val workRequest: WorkRequest = OneTimeWorkRequestBuilder<PodcastWorker>().
+                            setInputData(workDataOf("downloadId" to download.download.value.request.id)).addTag("prepare_player_selected_download").build()
+                            WorkManager.getInstance(context).enqueue(workRequest)
+                            onPodCastListen()
                         },
                         title = {
                             Text(fontSize = 12.sp,

@@ -1,7 +1,12 @@
 package dk.mhr.radio8podcast.presentation
 
 
+import android.content.Context
+import android.media.AudioManager
+import android.media.MediaMetadata
 import android.media.session.MediaSession
+import android.media.session.PlaybackState
+import android.support.v4.media.MediaMetadataCompat
 import android.util.Log
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -10,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -19,15 +25,15 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
-import com.google.android.exoplayer2.ExoPlayer
+
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import kotlinx.coroutines.delay
 
-class PodcastPlayerComposable() {
+class PodcastPlayerComposable(val context:Context) {
 
     @Composable
-    fun showPlayer(title: String?) {
+    fun showPlayer() {
 
         var checked by remember { mutableStateOf(true) }
         var contentPositionString by remember { mutableStateOf("") }
@@ -79,12 +85,47 @@ class PodcastPlayerComposable() {
                         )
                         if (checked) {
 
-                            podcastViewModel.session = MediaSession(podcastViewModel.CONTEXT!!, "PodcastService").apply {
-                                setCallback(PodcastViewModel.PodcastMediaCallback())
-                            }
-                            podcastViewModel.session?.isActive = true
+                            val focusLock = Any()
 
-                            podcastViewModel.player?.play()
+                            var playbackDelayed = false
+                            var playbackNowAuthorized = false
+
+                            val res = podcastViewModel.audioManager?.requestAudioFocus(
+                                podcastViewModel.focusRequest!!)
+                            synchronized(focusLock) {
+                                playbackNowAuthorized = when (res) {
+                                    AudioManager.AUDIOFOCUS_REQUEST_FAILED -> false
+                                    AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
+                                        Log.i(DEBUG_LOG, "AudioFocus granted. Now I start player")
+                                        podcastViewModel.player?.play()
+
+                                        true
+                                    }
+                                    AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
+                                        playbackDelayed = true
+                                        false
+                                    }
+                                    else -> false
+                                }
+                            }
+
+
+                            podcastViewModel.session = MediaSession(context, "PodcastService").apply {
+                                setCallback(PodcastViewModel.PodcastMediaCallback())
+                                setMetadata(MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, "Her kommer pipi")
+                                    .putString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI, "https://production.listennotes.com/podcasts/star-wars-7x7-the-daily-star-wars-podcast-HN08OoDE7pc-AIg3cZVKCsL.1400x1400.jpg")
+                                    .putString(MediaMetadata.METADATA_KEY_ARTIST, "Artist pipi").build())
+
+                                //controller.
+                                setPlaybackState(PlaybackState.Builder().setState(PlaybackState.STATE_PLAYING, 0, 1f).build())
+                                isActive = true
+
+                            }
+//                            podcastViewModel.session?.isActive = true
+//                            val mediaMetadata = MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, "Her kommer pipi").build()
+//                            podcastViewModel.session?.setMetadata(mediaMetadata)
+
+                            //podcastViewModel.player?.play()
 
                         } else {
                             podcastViewModel.player?.pause()
@@ -104,7 +145,7 @@ class PodcastPlayerComposable() {
                 }
                 Spacer(Modifier.size(2.dp))
                 Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.padding(10.dp, 0.dp)) {
-                    Text(text = title!!, overflow = TextOverflow.Ellipsis, softWrap = true, maxLines = 3, fontSize = 12.sp)
+                    podcastViewModel.player?.currentMediaItem?.mediaId?.let { Text(text = it, overflow = TextOverflow.Ellipsis, softWrap = true, maxLines = 3, fontSize = 12.sp) }
                 }
 
                 if (durationString.isEmpty()) {

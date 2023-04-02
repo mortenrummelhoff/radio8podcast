@@ -2,7 +2,11 @@ package dk.mhr.radio8podcast.presentation
 
 import android.content.Context
 import android.content.Intent
+import android.media.AudioFocusRequest
+import android.media.AudioManager
+import android.media.AudioManager.OnAudioFocusChangeListener
 import android.media.session.MediaSession
+import android.service.autofill.OnClickAction
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
@@ -38,11 +42,11 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     }
 
 
+    lateinit var audioManager: AudioManager
+    var focusRequest: AudioFocusRequest? = null
     var LIFECYCLEOWNER: LifecycleOwner? = null
     var session: MediaSession? = null
-    var CONTEXT: Context? = null
 
-    val playerEventLister = PlayerEventListerUpdated()
     var player: ExoPlayer? = null
 
     //lateinit var podcastDao:PodcastDao
@@ -56,6 +60,8 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     var loadingState = false
 
 
+
+
     fun initializePlayer(context: Context) {
         val exoPlayer by lazy {
             ExoPlayer.Builder(context).setMediaSourceFactory(
@@ -64,9 +70,9 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
                 )
             ).build()
         }
-
-        exoPlayer.removeListener(podcastViewModel.playerEventLister)
-        exoPlayer.addListener(podcastViewModel.playerEventLister)
+        val playerEventLister = PlayerEventListerUpdated(context)
+        exoPlayer.removeListener(playerEventLister)
+        exoPlayer.addListener(playerEventLister)
         exoPlayer.experimentalSetOffloadSchedulingEnabled(true)
         exoPlayer.setPlaybackSpeed(1.0f)
         player = exoPlayer
@@ -125,7 +131,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         }
     }
 
-    class PlayerEventListerUpdated : Player.Listener {
+    class PlayerEventListerUpdated(val context: Context) : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             (0 until events.size()).forEach {
                 Log.i(DEBUG_LOG, "onEvents called: $player Event: ${events.get(it)}")
@@ -174,7 +180,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
                         val playerWorkRequest: WorkRequest =
                             OneTimeWorkRequestBuilder<PlayerWorker>().setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                                 .build()
-                        WorkManager.getInstance(podcastViewModel.CONTEXT!!).enqueue(playerWorkRequest)
+                        WorkManager.getInstance(context).enqueue(playerWorkRequest)
 
                     }
                 }
@@ -223,6 +229,11 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         }
     }
 
+//    val onStartAction: () -> Unit = {
+//        Log.i(DEBUG_LOG, "onClick called from compose. And here we have podcastViewMode")
+//    }
+
+
     private fun stopPlayEvent() {
         val currentPosition: Long? = player?.currentPosition
         val currentMediaItem = player?.currentMediaItem ?: return
@@ -245,8 +256,17 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     class PodcastMediaCallback : MediaSession.Callback() {
         override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
             Log.i(DEBUG_LOG, "Somebody hit the mediaButton: $mediaButtonIntent")
+
+            mediaButtonIntent.action
+
             return true;
             //return super.onMediaButtonEvent(mediaButtonIntent)
+        }
+    }
+
+    class PodcastAudioFocusChange: OnAudioFocusChangeListener {
+        override fun onAudioFocusChange(p0: Int) {
+            Log.i(DEBUG_LOG, "onAudioFocusChange called: $p0")
         }
     }
 

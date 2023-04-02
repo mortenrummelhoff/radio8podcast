@@ -44,7 +44,7 @@ class PodcastNavHostComposable {
             startDestination = startDestination
         ) {
             composable(Screen.Landing.route) {
-                PodcastLandingComposable().landingScreen(onNavigateToFetchPodcast = {
+                PodcastLandingComposable(context).landingScreen(onNavigateToFetchPodcast = {
                     Log.i(DEBUG_LOG, "Calling navigate to ShowPodcasts")
                     navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
                 },
@@ -52,17 +52,8 @@ class PodcastNavHostComposable {
                         podcastViewModel.fetchDownloadList(PodcastUtils.getDownloadManager(context).downloadIndex)
                         navController.navigate(Screen.SeeDownloads.route)
                     },
-                    onPodCastListen = { downloadId, title ->
-                        Log.i("MHR", "DownloadId: $downloadId")
-                        navController.navigate(
-                            route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(
-                                downloadId,
-                                "UTF8"
-                            ) + "/" + URLEncoder.encode(
-                                title,
-                                "UTF8"
-                            )
-                        ) { popUpTo(Screen.SeeDownloads.route) }
+                    onPodCastListen = {
+                        navController.navigate(route = Screen.PodcastPlayer.route) { popUpTo(Screen.SeeDownloads.route) }
                     }
                 )
 
@@ -91,45 +82,19 @@ class PodcastNavHostComposable {
                     PodcastUtils.getDownloadTracker(LocalContext.current),
                     PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex,
                     lifecycleOwner
-                ).SeeDownloadList(onPodCastListen = { downloadId, title ->
-                    Log.i("MHR", "DownloadId: $downloadId")
-                    navController.navigate(
-                        route = Screen.PodcastPlayer.route + "/" + URLEncoder.encode(
-                            downloadId,
-                            "UTF8"
-                        ) + "/" + URLEncoder.encode(
-                            title,
-                            "UTF8"
-                        )
-                    ) { popUpTo(Screen.SeeDownloads.route) }
+                ).SeeDownloadList(onPodCastListen = {
+                    navController.navigate(route = Screen.PodcastPlayer.route)
+                    { popUpTo(Screen.SeeDownloads.route) }
                 }, onPodCastDelete = { download ->
                     Log.i("MHR", "Now delete download: ${download.download.value.request.id}")
-
-
                     PodcastUtils.getDownloadManager(context)
                         .removeDownload(download.download.value.request.id)
                 }, context)
             }
             composable(
-                route = Screen.PodcastPlayer.route + "/{" + DOWNLOAD_ID + "}/{" + TITLE + "}",
-                arguments = listOf(
-                    navArgument(DOWNLOAD_ID) { NavType.StringType },
-                    navArgument(TITLE) { NavType.StringType })
-
+                route = Screen.PodcastPlayer.route
             ) {
-                val download =
-                    PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex.getDownload(
-                        URLDecoder.decode(
-                            it.arguments?.getString(
-                                DOWNLOAD_ID
-                            ), "UTF8"
-                        )
-                    )
-                podcastViewModel.preparePlayer(download?.request?.toMediaItem(), {})
-                PodcastPlayerComposable().showPlayer(
-                    URLDecoder.decode(it.arguments?.getString(
-                        TITLE
-                    ), "UTF8"))
+                PodcastPlayerComposable(context).showPlayer()
             }
         }
 

@@ -1,5 +1,6 @@
 package dk.mhr.radio8podcast.presentation
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -21,25 +23,23 @@ import androidx.wear.compose.material.*
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.data.PodcastEntity
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
+import dk.mhr.radio8podcast.service.PodcastUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.URLDecoder
 
-class PodcastLandingComposable {
+class PodcastLandingComposable(val context: Context) {
 
     @Composable
     fun landingScreen (
         onNavigateToFetchPodcast: () -> Unit,
         onNavigateToSeeDownloadList: () -> Unit,
-        onPodCastListen: (downloadId: String, title: String) -> Unit
+        onPodCastListen: () -> Unit
     ) {
 
         val padding = 6.dp
         Radio8podcastTheme {
-            /* If you have enough items in your list, use [ScalingLazyColumn] which is an optimized
-             * version of LazyColumn for wear devices with some added features. For more information,
-             * see d.android.com/wear/compose.
-             */
             Column(
                 modifier = Modifier
                     .captionBarPadding().fillMaxSize()
@@ -70,21 +70,8 @@ class PodcastLandingComposable {
                     }
                 )
 
-                val currentlyPlaying = remember { mutableStateOf<PodcastEntity?>(null) }
-
-                LaunchedEffect(Unit) {
-                    podcastViewModel.viewModelScope.launch {
-                        withContext(Dispatchers.IO) {
-                            podcastViewModel.podcastRepository.podcastDao.findCurrentPlaying().let {
-                                it.let {
-                                    currentlyPlaying.value = it
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (currentlyPlaying.value != null) {
+                //val currentlyPlaying = remember { mutableStateOf<PodcastEntity?>(null) }
+                if (podcastViewModel.player?.currentMediaItem != null) {
                     Spacer(Modifier.size(padding))
 
                     Chip(
@@ -94,14 +81,11 @@ class PodcastLandingComposable {
                             backgroundColor = MaterialTheme.colors.background
                         ),
                         onClick = {
-                            onPodCastListen(
-                                currentlyPlaying.value!!.url!!,
-                                currentlyPlaying.value!!.url!!
-                            )
+                            onPodCastListen()
                         },
                         label = {
                             Text(
-                                text = currentlyPlaying.value!!.url!!,
+                                text = podcastViewModel.player?.currentMediaItem?.mediaId!!,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 textAlign = TextAlign.Center

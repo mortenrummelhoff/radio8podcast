@@ -39,6 +39,7 @@ class PlayerWorker(context: Context, workerParameters: WorkerParameters):
         val channel = NotificationChannel("Channel1", "Podcast", importance)
         channel.description = "PodcastPlayerChannel"
         notificationManager.createNotificationChannel(channel)
+
     }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
