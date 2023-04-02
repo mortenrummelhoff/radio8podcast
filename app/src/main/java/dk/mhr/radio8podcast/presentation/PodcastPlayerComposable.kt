@@ -20,10 +20,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.media3.session.MediaController
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.google.common.util.concurrent.MoreExecutors
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
 import kotlinx.coroutines.delay
@@ -119,6 +121,16 @@ class PodcastPlayerComposable(val context:Context) {
 
 
                                         podcastViewModel.player?.play()
+//                                        val controllerFuture = MediaController.Builder(context, podcastViewModel.session?.token!!).buildAsync()
+//                                        controllerFuture.addListener(
+//                                            {
+//                                                Log.i(DEBUG_LOG, "Where is controllerMEdia")
+//                                                val mediaController = controllerFuture.get()
+//                                                mediaController.addListener(PodcastViewModel.PlayerEventListerUpdated(context))
+//
+//                                            },
+//                                            MoreExecutors.directExecutor()
+//                                        )
 
                                         true
                                     }

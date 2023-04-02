@@ -1,16 +1,13 @@
 package dk.mhr.radio8podcast.presentation
 
 import android.content.Context
-import android.content.Intent
-
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.AudioManager.OnAudioFocusChangeListener
-
-//import android.media.session.MediaSession
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,21 +16,14 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadIndex
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.session.MediaController
 import androidx.media3.session.MediaSession
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
+import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-//import com.google.android.exoplayer2.ExoPlayer
-
-//import com.google.android.exoplayer2.ExoPlayer
-//import com.google.android.exoplayer2.MediaItem
-
-//import com.google.android.exoplayer2.offline.Download
-//import com.google.android.exoplayer2.offline.DownloadIndex
-//import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import dk.mhr.radio8podcast.data.PodcastEntity
 import dk.mhr.radio8podcast.data.PodcastRepository
 import dk.mhr.radio8podcast.service.PlayerForegroundWorker
@@ -52,12 +42,14 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     }
 
 
+    lateinit var exoPlayer: ExoPlayer
+    var player: MediaController? = null
     lateinit var audioManager: AudioManager
     var focusRequest: AudioFocusRequest? = null
     var LIFECYCLEOWNER: LifecycleOwner? = null
-    var session: MediaSession? = null
+    //var session: MediaSession? = null
 
-    var player: Player? = null
+    //var player: Player? = null
 
     //lateinit var podcastDao:PodcastDao
     lateinit var podcastRepository: PodcastRepository
@@ -69,29 +61,6 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     var loadingState = false
 
-
-
-
-    fun initializePlayer(context: Context) {
-        val exoPlayer by lazy {
-            ExoPlayer.Builder(context).setMediaSourceFactory(
-                DefaultMediaSourceFactory(context).setDataSourceFactory(
-                    PodcastUtils.getDataSourceFactory(context)
-                )
-            ).build()
-        }
-        val playerEventLister = PlayerEventListerUpdated(context)
-        exoPlayer.removeListener(playerEventLister)
-        exoPlayer.addListener(playerEventLister)
-        exoPlayer.experimentalSetOffloadSchedulingEnabled(true)
-        exoPlayer.setPlaybackSpeed(1.0f)
-        player = exoPlayer
-        podcastViewModel.session = MediaSession.Builder(context, player!!).
-        setCallback(PodcastMediaCallback()).build()
-        Log.i(DEBUG_LOG, "Session created!!! Token: " + podcastViewModel.session?.token)
-
-
-    }
 
     fun formatLength(totalSecs: Long): String {
         val hours = totalSecs / 1000 / 3600;
@@ -203,7 +172,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
         }
     }
 
-    fun preparePlayer(mediaItem: MediaItem?, events: () -> Unit) {
+    fun preparePlayer(mediaItem: MediaItem?) {
         Log.i(DEBUG_LOG, "Preparing player for : ${mediaItem?.mediaId}");
         var startP = 0L
 
@@ -219,25 +188,30 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
                     } else {
                         Log.i( DEBUG_LOG,"Podcast exist in db for mediaId: ${mediaItem.mediaId} With startPosition: ${podcastEntity.startPosition}")
                         startP = podcastEntity.startPosition!!
+                        //startP = 0;
                     }
                 }.let {
                     if (player?.mediaItemCount == 0) {
-                        mediaItem?.let { player?.setMediaItem(it, startP) }
-                        player?.prepare()
-                        Log.i(DEBUG_LOG, "Start play some podcast")
+                        mediaItem?.let { player?.setMediaItem(it, startP)
+                            player?.prepare()
+                            Log.i(DEBUG_LOG, "Start play some podcast")
+                        }
+
                     } else {
                         if (mediaItem?.mediaId.equals(player?.currentMediaItem?.mediaId)) {
                             Log.i(DEBUG_LOG,"Player already loaded with same mediaItem: $mediaItem")
                         } else {
                             Log.i(DEBUG_LOG, "Player loaded with other mediaItem that selected. Load new into player: $mediaItem")
-                            mediaItem?.let { player?.setMediaItem(it, startP) }
-                            player?.prepare()
+                            mediaItem?.let { player?.setMediaItem(it, startP)
+                                player?.prepare()}
+
                         }
                     }
 
                     Log.i(
                         DEBUG_LOG,
-                        "CurrentMediaItemId " + player?.currentMediaItem?.mediaId + ", contentPosition: " + player?.contentPosition
+                        "CurrentMediaItemId " + player?.currentMediaItem?.mediaId + ", contentPosition: " + player?.contentPosition +
+                                ", contentLength: " + player?.contentDuration
                     )
                 }
             }
@@ -268,7 +242,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     data class DataDownload(val download: MutableState<Download>, val startPosition: Long)
 
 
-    class PodcastMediaCallback : MediaSession.Callback {
+    class PodcastMediaCallback(val context: Context) : MediaSession.Callback {
         override fun onPlayerCommandRequest(
             session: MediaSession,
             controller: MediaSession.ControllerInfo,
@@ -299,6 +273,24 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
             super.onPostConnect(session, controller)
         }
 
+        override fun onAddMediaItems(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            mediaItems: MutableList<MediaItem>
+        ): ListenableFuture<MutableList<MediaItem>> {
+            Log.i(DEBUG_LOG, "onAddMediaItems called!!")
+            val download = PodcastUtils.getDownloadManager(context).downloadIndex.getDownload(mediaItems[0].mediaId)
+            val updatedMediaItems: MutableList<MediaItem> = mutableListOf()
+
+            if (download != null) {
+                updatedMediaItems.add(download.request.toMediaItem())
+            }
+
+            //val updatedMediaItems = mediaItems.map { it.buildUpon().setUri(it.mediaId).build() }.toMutableList()
+            return Futures.immediateFuture(updatedMediaItems)
+            //return super.onAddMediaItems(mediaSession, controller, mediaItems)
+        }
+
         override fun onSetMediaItems(
             mediaSession: MediaSession,
             controller: MediaSession.ControllerInfo,
@@ -306,15 +298,27 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
             startIndex: Int,
             startPositionMs: Long
         ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
-            Log.i(DEBUG_LOG, "onSetMediaItems : $mediaItems")
+            Log.i(DEBUG_LOG, "onSetMediaItems : $mediaItems, StartIndex: $startIndex, size: ${mediaItems.size}" )
+
+            val download = PodcastUtils.getDownloadManager(context).downloadIndex.getDownload(mediaItems[startIndex].mediaId)
+            val updatedMediaItems: MutableList<MediaItem> = mutableListOf()
+
+            if (download != null) {
+                updatedMediaItems.add(startIndex, download.request.toMediaItem())
+            }
+
+            //return Futures.immediateFuture()
+
             return super.onSetMediaItems(
                 mediaSession,
                 controller,
-                mediaItems,
+                updatedMediaItems,
                 startIndex,
                 startPositionMs
             )
         }
+
+
 
 //        override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
 //            Log.i(DEBUG_LOG, "Somebody hit the mediaButton: $mediaButtonIntent")

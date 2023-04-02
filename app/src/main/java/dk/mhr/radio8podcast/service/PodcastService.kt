@@ -3,7 +3,6 @@ package dk.mhr.radio8podcast.service
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.media3.exoplayer.offline.DownloadIndex
-//import com.google.android.exoplayer2.offline.DownloadIndex
 import dk.mhr.radio8podcast.data.PodcastDao
 import dk.mhr.radio8podcast.presentation.DEBUG_LOG
 import dk.mhr.radio8podcast.presentation.PodcastViewModel

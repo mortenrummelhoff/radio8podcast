@@ -46,8 +46,17 @@
             android:exported="false">
             <!-- This is needed for Scheduler -->
             <intent-filter>
-                <action android:name="com.google.android.exoplayer.downloadService.action.RESTART"/>
+                <action android:name="androidx.media3.exoplayer.downloadService.action.RESTART"/>
                 <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".service.PodcastPlayerService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService"/>
             </intent-filter>
         </service>
 

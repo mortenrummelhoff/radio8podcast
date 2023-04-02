@@ -20,14 +20,14 @@ class PodcastWorker(appContext: Context, workerParams: WorkerParameters) :
 
             if (findCurrentPlaying != null) {
                 val download = PodcastUtils.getDownloadManager(applicationContext).downloadIndex.getDownload(findCurrentPlaying?.url!!)
-                podcastViewModel.preparePlayer(download?.request?.toMediaItem(), {})
+                podcastViewModel.preparePlayer(download?.request?.toMediaItem())
             }
         }
 
         if (tags.contains("prepare_player_selected_download")) {
             val selectedDownloadId = inputData.getString("downloadId")
             val download = PodcastUtils.getDownloadManager(applicationContext).downloadIndex.getDownload(selectedDownloadId!!)
-            podcastViewModel.preparePlayer(download?.request?.toMediaItem(), {})
+            podcastViewModel.preparePlayer(download?.request?.toMediaItem())
 
         }
 
