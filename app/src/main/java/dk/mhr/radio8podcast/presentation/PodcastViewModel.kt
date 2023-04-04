@@ -11,7 +11,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.offline.Download
@@ -41,9 +43,13 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     }
 
+    lateinit var controllerFuture: ListenableFuture<MediaController>
+    val controller: MediaController?
+        get() = if (controllerFuture.isDone) controllerFuture.get() else null
+
 
 //    lateinit var exoPlayer: ExoPlayer
-    var player: MediaController? = null
+    //var player: MediaController? = null
     lateinit var audioManager: AudioManager
     var focusRequest: AudioFocusRequest? = null
     var LIFECYCLEOWNER: LifecycleOwner? = null
@@ -116,6 +122,26 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     class PlayerEventListerUpdated(val context: Context) : Player.Listener {
 
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            Log.i(DEBUG_LOG, "onIsPlayingChanged: $isPlaying")
+            super.onIsPlayingChanged(isPlaying)
+        }
+
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            Log.i(DEBUG_LOG, "onPlaybackStateChanged: $playbackState")
+            super.onPlaybackStateChanged(playbackState)
+        }
+
+        override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
+            Log.i(DEBUG_LOG, "onPlaybackParametersChanged: $playbackParameters")
+            super.onPlaybackParametersChanged(playbackParameters)
+        }
+
+        override fun onAudioAttributesChanged(audioAttributes: AudioAttributes) {
+            Log.i(DEBUG_LOG, "onAudioAttributesChanged: $audioAttributes")
+            super.onAudioAttributesChanged(audioAttributes)
+        }
+
         override fun onEvents(player: Player, events: Player.Events) {
             (0 until events.size()).forEach {
                 Log.i(DEBUG_LOG, "onEvents called: $player Event: ${events.get(it)}")
@@ -178,8 +204,8 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
 
     private fun stopPlayEvent() {
-        val currentPosition: Long? = player?.currentPosition
-        val currentMediaItem = player?.currentMediaItem ?: return
+        val currentPosition: Long? = controller?.currentPosition
+        val currentMediaItem = controller?.currentMediaItem ?: return
         podcastViewModel.viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 val podcastEntity =

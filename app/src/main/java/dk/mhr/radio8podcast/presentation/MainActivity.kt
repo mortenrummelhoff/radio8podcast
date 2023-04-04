@@ -14,6 +14,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import androidx.work.*
+import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import dk.mhr.radio8podcast.data.AppDatabase
 import dk.mhr.radio8podcast.data.PodcastRepository
@@ -29,8 +30,11 @@ val DEBUG_LOG = "MHR";
 
 class MainActivity : ComponentActivity(), LifecycleOwner {
 
-    private val appDatabase by lazy { AppDatabase.getDatabase(this) }
 
+    private val appDatabase by lazy { AppDatabase.getDatabase(this) }
+    //private lateinit var controllerFuture: ListenableFuture<MediaController>
+    val playerEventLister = PodcastViewModel.PlayerEventListerUpdated(this)
+    val focusChangeListener = PodcastViewModel.PodcastAudioFocusChange()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -40,17 +44,14 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
                 setAudioAttributes(AudioAttributes.Builder().run {
                     setUsage(AudioAttributes.USAGE_MEDIA)
                     setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-
                     build()
                 })
                 setAcceptsDelayedFocusGain(true)
-                setOnAudioFocusChangeListener(PodcastViewModel.PodcastAudioFocusChange())
+                setOnAudioFocusChangeListener(focusChangeListener)
                 build()
             }
 
             podcastViewModel.LIFECYCLEOWNER = this
-            //podcastViewModel.initializePlayer(this)
-
             podcastViewModel.podcastRepository = PodcastRepository(appDatabase.podcastDao())
             val downloadIndex = PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex
 
@@ -58,30 +59,44 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
                 podcastViewModel.fetchDownloadList(downloadIndex)
             }
 
-            Log.i(DEBUG_LOG, "Oncreate called we have player: ${podcastViewModel.player}")
             PodcastNavHostComposable().PodCastNavHost("WearApp", this, this)
         }
     }
 
     override fun onStart() {
         super.onStart()
-        val sessionToken = SessionToken(this, ComponentName(this, PodcastPlayerService::class.java))
-        val playerEventLister = PodcastViewModel.PlayerEventListerUpdated(this)
-        val controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
-        controllerFuture.addListener(
-            {
-                Log.i(DEBUG_LOG, "Waiting for mediaController")
-                val mediaController = controllerFuture.get()
-                Log.i(DEBUG_LOG, "Media Controller initiated!!")
-                podcastViewModel.player = mediaController
-                mediaController.removeListener(playerEventLister)
-                mediaController.addListener(playerEventLister)
-                //mediaController.experimentalSetOffloadSchedulingEnabled(true)
-                mediaController.setPlaybackSpeed(1.0f)
 
-            },
-            MoreExecutors.directExecutor()
-        )
+        podcastViewModel.controllerFuture =
+            MediaController.Builder(
+                this,
+                SessionToken(this, ComponentName(this, PodcastPlayerService::class.java))
+            )
+                .buildAsync()
+        podcastViewModel.controllerFuture.addListener({ setController() }, MoreExecutors.directExecutor())
+
+
+//        Log.i(DEBUG_LOG, "onStart called!!!!!!")
+//        val sessionToken = SessionToken(this, ComponentName(this, PodcastPlayerService::class.java))
+//        controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
+//        controllerFuture.addListener(
+//            {
+//                val mediaController = controllerFuture.get()
+//
+//                    podcastViewModel.player = mediaController
+//                    mediaController.removeListener(playerEventLister)
+//                    mediaController.addListener(playerEventLister)
+//                    //mediaController.setPlaybackSpeed(1.0f)
+//
+//            },
+//            MoreExecutors.directExecutor()
+//        )
+    }
+
+    private fun setController() {
+        val controller = podcastViewModel.controller ?: return
+
+        controller.removeListener(playerEventLister)
+        controller.addListener(playerEventLister)
     }
 
     override fun onResume() {
@@ -95,13 +110,12 @@ class MainActivity : ComponentActivity(), LifecycleOwner {
 
     override fun onPause() {
         Log.i(DEBUG_LOG, "onPause called!!")
-
-        if (podcastViewModel.player?.isPlaying == false) {
-//            Log.i(DEBUG_LOG, "Player is not playing. Release it")
-//            podcastViewModel.player?.release()
-//            podcastViewModel.session?.release()
-        }
         super.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        MediaController.releaseFuture(podcastViewModel.controllerFuture)
     }
 
     override fun onDestroy() {

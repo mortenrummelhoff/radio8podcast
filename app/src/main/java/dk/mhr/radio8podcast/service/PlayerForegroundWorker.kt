@@ -48,7 +48,6 @@ class PlayerForegroundWorker(context: Context, workerParameters: WorkerParameter
     }
 
     private fun createNotification(currentPosition: Long, mediaId: String?): Notification {
-        Log.i(DEBUG_LOG, "createNotification")
 
         val notification = NotificationCompat.Builder(applicationContext, "Channel1")
             .setContentTitle(mediaId)
@@ -79,12 +78,12 @@ class PlayerForegroundWorker(context: Context, workerParameters: WorkerParameter
         val currentPosition = MutableLiveData<Long>(0)
 
         while (isPlaying.value!!) {
-
+            delay(5000)
             runBlocking {
                 withContext(Dispatchers.Main) {
-                    isPlaying.value = podcastViewModel.player!!.isPlaying
-                    mediaItem.value = podcastViewModel.player!!.currentMediaItem
-                    currentPosition.value = podcastViewModel.player!!.currentPosition
+                    isPlaying.value = podcastViewModel.controller!!.isPlaying
+                    mediaItem.value = podcastViewModel.controller!!.currentMediaItem
+                    currentPosition.value = podcastViewModel.controller!!.currentPosition
                 }
             }
             notificationManager.notify(nextNotificationId, createNotification(currentPosition.value!!, mediaItem.value?.mediaId))

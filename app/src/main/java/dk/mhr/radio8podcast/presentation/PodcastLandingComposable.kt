@@ -71,7 +71,7 @@ class PodcastLandingComposable(val context: Context) {
                 )
 
                 //val currentlyPlaying = remember { mutableStateOf<PodcastEntity?>(null) }
-                if (podcastViewModel.player?.currentMediaItem != null) {
+                if (podcastViewModel.controller?.currentMediaItem != null) {
                     Spacer(Modifier.size(padding))
 
                     Chip(
@@ -85,7 +85,7 @@ class PodcastLandingComposable(val context: Context) {
                         },
                         label = {
                             Text(
-                                text = podcastViewModel.player?.currentMediaItem?.mediaId!!,
+                                text = podcastViewModel.controller?.currentMediaItem?.mediaId!!,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 textAlign = TextAlign.Center

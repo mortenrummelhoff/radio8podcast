@@ -53,12 +53,12 @@ class PodcastPlayerComposable(val context:Context) {
         LaunchedEffect(Unit) {
             while (true) {
                 contentPositionString =
-                    podcastViewModel.formatLength(totalSecs = podcastViewModel.player?.contentPosition!!)
+                    podcastViewModel.formatLength(totalSecs = podcastViewModel.controller?.contentPosition!!)
                 //save duration to state
                 delay(1000)
 
-                if (!podcastViewModel.player?.isLoading!!) {
-                    durationString = podcastViewModel.formatLength(podcastViewModel.player?.duration!!)
+                if (!podcastViewModel.controller?.isLoading!!) {
+                    durationString = podcastViewModel.formatLength(podcastViewModel.controller?.duration!!)
                 }
             }
         }
@@ -81,7 +81,7 @@ class PodcastPlayerComposable(val context:Context) {
                         checked = !checked
                         Log.i(
                             DEBUG_LOG,
-                            "Checked: $checked" + ", hasNextMediaItem: " + podcastViewModel.player?.hasNextMediaItem()
+                            "Checked: $checked" + ", hasNextMediaItem: " + podcastViewModel.controller?.hasNextMediaItem()
                         )
                         if (checked) {
 
@@ -90,26 +90,33 @@ class PodcastPlayerComposable(val context:Context) {
                             var playbackDelayed = false
                             var playbackNowAuthorized = false
 
-                            val res = podcastViewModel.audioManager?.requestAudioFocus(
-                                podcastViewModel.focusRequest!!)
+                            val res = podcastViewModel.audioManager?.requestAudioFocus(podcastViewModel.focusRequest!!)
                             synchronized(focusLock) {
                                 playbackNowAuthorized = when (res) {
-                                    AudioManager.AUDIOFOCUS_REQUEST_FAILED -> false
+                                    AudioManager.AUDIOFOCUS_REQUEST_FAILED ->  {
+                                        Log.i(DEBUG_LOG, "AudioFocus request AUDIOFOCUS_REQUEST_FAILED")
+                                        false
+                                    }
                                     AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
-                                        Log.i(DEBUG_LOG, "AudioFocus granted. Now I start player")
-                                        podcastViewModel.player?.play()
+                                        Log.i(DEBUG_LOG, "AudioFocus granted. AUDIOFOCUS_REQUEST_GRANTED")
                                         true
                                     }
                                     AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
+                                        Log.i(DEBUG_LOG, "AudioFocus request delayed granted. AUDIOFOCUS_REQUEST_DELAYED")
                                         playbackDelayed = true
-                                        false
+                                        true
                                     }
                                     else -> false
                                 }
                             }
+                            if (playbackNowAuthorized) {
+                                Log.i(DEBUG_LOG, "playbackNowAuthorized. Start player")
+                                podcastViewModel.controller?.play()
+                            }
 
                         } else {
-                            podcastViewModel.player?.pause()
+                            podcastViewModel.audioManager.abandonAudioFocusRequest(podcastViewModel.focusRequest!!)
+                            podcastViewModel.controller?.pause()
                         }
 
                     },
@@ -125,7 +132,7 @@ class PodcastPlayerComposable(val context:Context) {
                 }
                 Spacer(Modifier.size(2.dp))
                 Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.padding(10.dp, 0.dp)) {
-                    podcastViewModel.player?.currentMediaItem?.mediaId?.let { Text(text = it, overflow = TextOverflow.Ellipsis, softWrap = true, maxLines = 3, fontSize = 12.sp) }
+                    podcastViewModel.controller?.currentMediaItem?.mediaId?.let { Text(text = it, overflow = TextOverflow.Ellipsis, softWrap = true, maxLines = 3, fontSize = 12.sp) }
                 }
 
                 if (durationString.isEmpty()) {
@@ -139,14 +146,14 @@ class PodcastPlayerComposable(val context:Context) {
                 Row {
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "-15s")
-                        podcastViewModel.player?.seekTo(podcastViewModel.player?.currentPosition!! - 15000)
+                        podcastViewModel.controller?.seekTo(podcastViewModel.controller?.currentPosition!! - 15000)
                     }) {
                         Text("-15s")
                     }
                     Spacer(Modifier.padding(30.dp, 4.dp, 30.dp, 4.dp))
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "+15s")
-                        podcastViewModel.player?.seekTo(podcastViewModel.player?.currentPosition!! + 15000)
+                        podcastViewModel.controller?.seekTo(podcastViewModel.controller?.currentPosition!! + 15000)
                     }) {
                         Text("+15s")
                     }
@@ -155,7 +162,7 @@ class PodcastPlayerComposable(val context:Context) {
                 Row {
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "DecreaseVol called")
-                        podcastViewModel.player?.decreaseDeviceVolume()
+                        podcastViewModel.controller?.decreaseDeviceVolume()
                     }) {
                         Icon(
                             contentDescription = stringResource(R.string.decreateVolume),
@@ -168,7 +175,7 @@ class PodcastPlayerComposable(val context:Context) {
                     Spacer(Modifier.padding(4.dp, 0.dp, 0.dp, 4.dp))
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "IncreaseVol called")
-                        podcastViewModel.player?.increaseDeviceVolume()
+                        podcastViewModel.controller?.increaseDeviceVolume()
                     }) {
                         Icon(
                             contentDescription = stringResource(R.string.increateVolume),

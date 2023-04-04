@@ -60,18 +60,16 @@ class PodcastWorker(appContext: Context, workerParams: WorkerParameters) :
                     //startP = 0;
                 }
             }.apply {
-                Log.i(DEBUG_LOG, "It this then run!!")
                 withContext(Dispatchers.Main) {
-                    Log.i(DEBUG_LOG, "It this then run MAIN!!")
-                    if (podcastViewModel.player?.mediaItemCount == 0) {
+                    if (podcastViewModel.controller?.mediaItemCount == 0) {
                         mediaItem?.let {
-                            podcastViewModel.player?.setMediaItem(it, startP)
-                            podcastViewModel.player?.prepare()
+                            podcastViewModel.controller?.setMediaItem(it, startP)
+                            podcastViewModel.controller?.prepare()
                             Log.i(DEBUG_LOG, "Start play some podcast")
                         }
 
                     } else {
-                        if (mediaItem?.mediaId.equals(podcastViewModel.player?.currentMediaItem?.mediaId)) {
+                        if (mediaItem?.mediaId.equals(podcastViewModel.controller?.currentMediaItem?.mediaId)) {
                             Log.i(
                                 DEBUG_LOG,
                                 "Player already loaded with same mediaItem: $mediaItem"
@@ -82,8 +80,8 @@ class PodcastWorker(appContext: Context, workerParams: WorkerParameters) :
                                 "Player loaded with other mediaItem that selected. Load new into player: $mediaItem"
                             )
                             mediaItem?.let {
-                                podcastViewModel.player?.setMediaItem(it, startP)
-                                podcastViewModel.player?.prepare()
+                                podcastViewModel.controller?.setMediaItem(it, startP)
+                                podcastViewModel.controller?.prepare()
                             }
 
                         }
@@ -91,8 +89,8 @@ class PodcastWorker(appContext: Context, workerParams: WorkerParameters) :
 
                     Log.i(
                         DEBUG_LOG,
-                        "CurrentMediaItemId " + podcastViewModel.player?.currentMediaItem?.mediaId + ", contentPosition: " + podcastViewModel.player?.contentPosition +
-                                ", contentLength: " + podcastViewModel.player?.contentDuration
+                        "CurrentMediaItemId " + podcastViewModel.controller?.currentMediaItem?.mediaId + ", contentPosition: " + podcastViewModel.controller?.contentPosition +
+                                ", contentLength: " + podcastViewModel.controller?.contentDuration
                     )
                 }
             }
