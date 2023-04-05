@@ -78,16 +78,22 @@ class PlayerForegroundWorker(context: Context, workerParameters: WorkerParameter
         val currentPosition = MutableLiveData<Long>(0)
 
         while (isPlaying.value!!) {
-            delay(5000)
             runBlocking {
                 withContext(Dispatchers.Main) {
-                    isPlaying.value = podcastViewModel.controller!!.isPlaying
-                    mediaItem.value = podcastViewModel.controller!!.currentMediaItem
-                    currentPosition.value = podcastViewModel.controller!!.currentPosition
+                    Log.i(DEBUG_LOG, "Is controller playing: " + podcastViewModel.controller?.isPlaying)
+
+                    isPlaying.value = podcastViewModel.controller?.isPlaying
+                    mediaItem.value = podcastViewModel.controller?.currentMediaItem
+                    currentPosition.value = podcastViewModel.controller?.currentPosition
+                }
+                if (isPlaying.value!!) {
+                    notificationManager.notify(
+                        nextNotificationId,
+                        createNotification(currentPosition.value!!, mediaItem.value?.mediaId)
+                    )
+                    delay(5000)
                 }
             }
-            notificationManager.notify(nextNotificationId, createNotification(currentPosition.value!!, mediaItem.value?.mediaId))
-            delay(5000)
         }
         Log.i(DEBUG_LOG, "Finish work for active player allowing to go to sleep")
 

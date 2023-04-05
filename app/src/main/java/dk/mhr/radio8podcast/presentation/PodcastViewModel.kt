@@ -7,6 +7,7 @@ import android.media.AudioManager.OnAudioFocusChangeListener
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
@@ -44,8 +45,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
     }
 
     lateinit var controllerFuture: ListenableFuture<MediaController>
-    val controller: MediaController?
-        get() = if (controllerFuture.isDone) controllerFuture.get() else null
+    val controller: MediaController? get() = if (controllerFuture.isDone) controllerFuture.get() else null
 
 
 //    lateinit var exoPlayer: ExoPlayer
@@ -67,6 +67,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     var loadingState = false
 
+    val playerIsPlaying = mutableStateOf(false)
 
     fun formatLength(totalSecs: Long): String {
         val hours = totalSecs / 1000 / 3600;
@@ -124,6 +125,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             Log.i(DEBUG_LOG, "onIsPlayingChanged: $isPlaying")
+            podcastViewModel.playerIsPlaying?.value = isPlaying
             super.onIsPlayingChanged(isPlaying)
         }
 
