@@ -88,7 +88,7 @@ class PodcastLandingComposable(val context: Context) {
                                 text = podcastViewModel.controller?.currentMediaItem?.mediaId!!,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         },
                         icon = {

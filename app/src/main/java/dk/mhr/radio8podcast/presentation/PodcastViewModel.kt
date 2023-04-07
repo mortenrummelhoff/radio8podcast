@@ -29,6 +29,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dk.mhr.radio8podcast.data.PodcastEntity
 import dk.mhr.radio8podcast.data.PodcastRepository
+import dk.mhr.radio8podcast.service.BluetoothStateMonitor
 import dk.mhr.radio8podcast.service.PlayerForegroundWorker
 import dk.mhr.radio8podcast.service.PodcastService
 import dk.mhr.radio8podcast.service.PodcastUtils
@@ -44,6 +45,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
     }
 
+    lateinit var bluetoothStateMonitor: BluetoothStateMonitor
     lateinit var controllerFuture: ListenableFuture<MediaController>
     val controller: MediaController? get() = if (controllerFuture.isDone) controllerFuture.get() else null
 

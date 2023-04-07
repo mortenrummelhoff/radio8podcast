@@ -5,6 +5,7 @@ import android.content.Context
 import android.media.AudioManager
 //import android.media.session.MediaSession
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -117,6 +118,8 @@ class PodcastPlayerComposable(val context: Context) {
                             }
                             if (playbackNowAuthorized) {
                                 Log.i(DEBUG_LOG, "playbackNowAuthorized. Start player")
+                                Toast.makeText(context, "Headset connected: " + podcastViewModel.bluetoothStateMonitor.isHeadsetConnected,
+                                    Toast.LENGTH_SHORT).show()
                                 podcastViewModel.controller?.play()
                             }
 
