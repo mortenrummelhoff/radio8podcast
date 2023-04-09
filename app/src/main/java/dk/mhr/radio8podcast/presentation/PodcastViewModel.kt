@@ -8,31 +8,25 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.AudioAttributes
-import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.Player.STATE_ENDED
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadIndex
 import androidx.media3.session.MediaController
-import androidx.media3.session.MediaSession
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
-import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import dk.mhr.radio8podcast.data.PodcastEntity
 import dk.mhr.radio8podcast.data.PodcastRepository
 import dk.mhr.radio8podcast.service.BluetoothStateMonitor
 import dk.mhr.radio8podcast.service.PlayerForegroundWorker
 import dk.mhr.radio8podcast.service.PodcastService
-import dk.mhr.radio8podcast.service.PodcastUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -133,6 +127,9 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             Log.i(DEBUG_LOG, "onPlaybackStateChanged: $playbackState")
+//            if (STATE_ENDED == playbackState) {
+//                podcastViewModel.updateCurrentPosition()
+//            }
             super.onPlaybackStateChanged(playbackState)
         }
 
@@ -150,52 +147,55 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
             (0 until events.size()).forEach {
                 Log.i(DEBUG_LOG, "onEvents called: $player Event: ${events.get(it)}")
 
-                if (Player.EVENT_IS_PLAYING_CHANGED == events.get(it)) {
-                    if (!player.isPlaying) {
-                        Log.i(DEBUG_LOG, "Stop player event. Stopping")
-                        podcastViewModel.stopPlayEvent()
-                    } else {
-                        val cMediaItem = player.currentMediaItem
-                        podcastViewModel.viewModelScope.launch {
-                            withContext(Dispatchers.IO) {
-                                podcastViewModel.podcastRepository.podcastDao.findCurrentPlaying()
-                                    .let { podcastEntity ->
-                                        Log.i(
-                                            DEBUG_LOG,
-                                            "Found CurrentlyPlaying: $podcastEntity"
-                                        )
-                                        if (podcastEntity != null) {
-                                            podcastViewModel.podcastRepository.podcastDao.updatePodcast(
-                                                podcastEntity.copy(
-                                                    currentPlaying = false
-                                                )
+                when (events.get(it)) {
+                    Player.EVENT_PLAYBACK_STATE_CHANGED -> if (player.playbackState == STATE_ENDED) podcastViewModel.updateCurrentPosition()
+                    Player.EVENT_IS_PLAYING_CHANGED -> {
+                        if (!player.isPlaying) {
+                            podcastViewModel.updateCurrentPosition()
+                        } else {
+                            val cMediaItem = player.currentMediaItem
+                            podcastViewModel.viewModelScope.launch {
+                                withContext(Dispatchers.IO) {
+                                    podcastViewModel.podcastRepository.podcastDao.findCurrentPlaying()
+                                        .let { podcastEntity ->
+                                            Log.i(
+                                                DEBUG_LOG,
+                                                "Found CurrentlyPlaying: $podcastEntity"
                                             )
+                                            if (podcastEntity != null) {
+                                                podcastViewModel.podcastRepository.podcastDao.updatePodcast(
+                                                    podcastEntity.copy(
+                                                        currentPlaying = false
+                                                    )
+                                                )
+                                            }
                                         }
-                                    }
 
-                                Log.i(
-                                    DEBUG_LOG, "Trying setting podcastEntry to currentPlaying: " +
-                                            cMediaItem?.mediaId
-                                )
-                                val podcastEntity =
-                                    podcastViewModel.podcastRepository.podcastDao.findByUrl(cMediaItem?.mediaId!!)
-                                if (podcastEntity != null) {
-                                    Log.i(DEBUG_LOG, "Found podcastEntry: $podcastEntity")
-                                    val updatedPodcastEntity =
-                                        podcastEntity.copy(currentPlaying = true)
-                                    podcastViewModel.podcastRepository.podcastDao.updatePodcast(
-                                        updatedPodcastEntity
+                                    Log.i(
+                                        DEBUG_LOG,
+                                        "Trying setting podcastEntry to currentPlaying: " +
+                                                cMediaItem?.mediaId
                                     )
+                                    val podcastEntity =
+                                        podcastViewModel.podcastRepository.podcastDao.findByUrl(
+                                            cMediaItem?.mediaId!!
+                                        )
+                                    if (podcastEntity != null) {
+                                        Log.i(DEBUG_LOG, "Found podcastEntry: $podcastEntity")
+                                        val updatedPodcastEntity =
+                                            podcastEntity.copy(currentPlaying = true)
+                                        podcastViewModel.podcastRepository.podcastDao.updatePodcast(
+                                            updatedPodcastEntity
+                                        )
+                                    }
                                 }
+                                Log.i(DEBUG_LOG, "Player started. Create and start PlayerWorkRequest!")
+                                val playerWorkRequest: WorkRequest =
+                                    OneTimeWorkRequestBuilder<PlayerForegroundWorker>().setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                                        .build()
+                                WorkManager.getInstance(context).enqueue(playerWorkRequest)
                             }
                         }
-                        Log.i(DEBUG_LOG, "Player started. Create and start PlayerWorkRequest!")
-
-                        val playerWorkRequest: WorkRequest =
-                            OneTimeWorkRequestBuilder<PlayerForegroundWorker>().setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-                                .build()
-                        WorkManager.getInstance(context).enqueue(playerWorkRequest)
-
                     }
                 }
             }
@@ -207,7 +207,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 //    }
 
 
-    private fun stopPlayEvent() {
+    private fun updateCurrentPosition() {
         val currentPosition: Long? = controller?.currentPosition
         val currentMediaItem = controller?.currentMediaItem ?: return
         podcastViewModel.viewModelScope.launch {

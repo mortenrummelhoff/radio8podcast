@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player.Command
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
@@ -18,7 +19,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import dk.mhr.radio8podcast.presentation.DEBUG_LOG
 
 
-class PodcastPlayerService: MediaSessionService() {
+@UnstableApi class PodcastPlayerService: MediaSessionService() {
     private var mediaSession: MediaSession? = null
 
     // Create your Player and MediaSession in the onCreate lifecycle event
@@ -48,7 +49,7 @@ class PodcastPlayerService: MediaSessionService() {
 
     }
 
-    private class PodcastMediaCallback(val context: Context) : MediaSession.Callback {
+    @UnstableApi private class PodcastMediaCallback(val context: Context) : MediaSession.Callback {
 
 
 
