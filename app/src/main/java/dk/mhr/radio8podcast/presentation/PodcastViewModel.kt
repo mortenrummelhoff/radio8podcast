@@ -190,6 +190,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
                                     }
                                 }
                                 Log.i(DEBUG_LOG, "Player started. Create and start PlayerWorkRequest!")
+                                //Not really necessary anymore as the controller now handles foreground services
                                 val playerWorkRequest: WorkRequest =
                                     OneTimeWorkRequestBuilder<PlayerForegroundWorker>().setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                                         .build()
