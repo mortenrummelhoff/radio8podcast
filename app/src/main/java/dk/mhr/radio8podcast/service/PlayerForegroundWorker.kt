@@ -86,6 +86,8 @@ import kotlinx.coroutines.withContext
                     isPlaying.value = podcastViewModel.controller?.isPlaying
                     mediaItem.value = podcastViewModel.controller?.currentMediaItem
                     currentPosition.value = podcastViewModel.controller?.currentPosition
+
+                    podcastViewModel.updateCurrentPosition()
                 }
                 if (isPlaying.value!!) {
                     notificationManager.notify(
@@ -94,11 +96,10 @@ import kotlinx.coroutines.withContext
                     )
                     delay(5000)
                 }
-                podcastViewModel.updateCurrentPosition()
+
             }
         }
         Log.i(DEBUG_LOG, "Finish work for active player allowing to go to sleep")
-
         return Result.success()
     }
 

@@ -12,6 +12,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
@@ -40,6 +41,9 @@ val DEBUG_LOG = "MHR";
 //    val bluetoothManager = this.getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
     //val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
     override fun onCreate(savedInstanceState: Bundle?) {
+        //val viewModel: PodcastViewModel by viewModels();
+
+
         podcastViewModel.bluetoothStateMonitor = bluetoothStateMonitor
         //installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -110,12 +114,18 @@ val DEBUG_LOG = "MHR";
     }
 
     override fun onResume() {
-        Log.i(DEBUG_LOG, "onResume called!!")
-
-        val findCurrentlyPlayedWorkRequest: WorkRequest = OneTimeWorkRequestBuilder<PodcastWorker>().
-        setInputData(workDataOf("" to "")).addTag("find_currently_played").build()
-        WorkManager.getInstance(applicationContext).enqueue(findCurrentlyPlayedWorkRequest)
         super.onResume()
+        Log.i(DEBUG_LOG, "onResume called. Check if player is playing")
+
+        if (podcastViewModel.controller?.isPlaying == true) {
+            Log.i(DEBUG_LOG, "Player is already playing, all good!!")
+        } else {
+            val findCurrentlyPlayedWorkRequest: WorkRequest =
+                OneTimeWorkRequestBuilder<PodcastWorker>().setInputData(workDataOf("" to ""))
+                    .addTag("find_currently_played").build()
+            WorkManager.getInstance(applicationContext).enqueue(findCurrentlyPlayedWorkRequest)
+        }
+
     }
 
     override fun onPause() {

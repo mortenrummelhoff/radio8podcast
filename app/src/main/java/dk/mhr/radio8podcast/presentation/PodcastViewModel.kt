@@ -15,6 +15,7 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.Player.STATE_ENDED
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadIndex
 import androidx.media3.session.MediaController
@@ -32,7 +33,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
-class PodcastViewModel(private val podcastService: PodcastService) : ViewModel() {
+@UnstableApi class PodcastViewModel(private val podcastService: PodcastService) : ViewModel() {
 
     init {
         Log.i("MHR", "PodcastViewModel initialized")
@@ -148,8 +149,26 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
                 Log.i(DEBUG_LOG, "onEvents called: $player Event: ${events.get(it)}")
 
                 when (events.get(it)) {
-                    Player.EVENT_PLAYBACK_STATE_CHANGED -> if (player.playbackState == STATE_ENDED) podcastViewModel.updateCurrentPosition()
+                    Player.EVENT_PLAY_WHEN_READY_CHANGED -> {
+                        Log.i(DEBUG_LOG, "EVENT_PLAY_WHEN_READY_CHANGED called: " + player.playWhenReady)
+                    }
+                    Player.EVENT_MEDIA_METADATA_CHANGED -> {
+                        Log.i(DEBUG_LOG, "EVENT_MEDIA_METADATA_CHANGED called: " + player.currentMediaItem?.mediaId)
+                    }
+                    Player.EVENT_POSITION_DISCONTINUITY -> {
+                        Log.i(DEBUG_LOG, "EVENT_POSITION_DISCONTINUITY called")
+                    }
+                    Player.EVENT_IS_LOADING_CHANGED -> {
+                        Log.i(DEBUG_LOG, "EVENT_IS_LOADING_CHANGED called: " + player.isLoading)
+                    }
+                    Player.EVENT_PLAYBACK_STATE_CHANGED -> {
+                        Log.i(DEBUG_LOG, "EVENT_PLAYBACK_STATE_CHANGED called: " + player.playbackState)
+                        if (player.playbackState == STATE_ENDED) {
+                            podcastViewModel.updateCurrentPosition(true)
+                        }
+                    }
                     Player.EVENT_IS_PLAYING_CHANGED -> {
+                        Log.i(DEBUG_LOG, "EVENT_IS_PLAYING_CHANGED:  " + player.isPlaying)
                         if (!player.isPlaying) {
                             podcastViewModel.updateCurrentPosition()
                         } else {
@@ -191,6 +210,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
                                 }
                                 Log.i(DEBUG_LOG, "Player started. Create and start PlayerWorkRequest!")
                                 //Not really necessary anymore as the controller now handles foreground services
+                                WorkManager.getInstance(context).cancelAllWork()
                                 val playerWorkRequest: WorkRequest =
                                     OneTimeWorkRequestBuilder<PlayerForegroundWorker>().setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                                         .build()
@@ -208,15 +228,16 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 //    }
 
 
-    fun updateCurrentPosition() {
+    fun updateCurrentPosition(playbackEnded: Boolean = false) {
         val currentPosition: Long? = controller?.currentPosition
         val currentMediaItem = controller?.currentMediaItem ?: return
         podcastViewModel.viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val podcastEntity =
-                    podcastViewModel.podcastRepository.podcastDao.findByUrl(currentMediaItem.mediaId)
+                val podcastEntity = podcastViewModel.podcastRepository.podcastDao.findByUrl(currentMediaItem.mediaId)
                 if (podcastEntity != null) {
-                    val updatedPodcastEntity = podcastEntity.copy(startPosition = currentPosition)
+                    val updatedPodcastEntity = podcastEntity.copy(startPosition = currentPosition,
+                        hasBeenPlayed = (podcastEntity.hasBeenPlayed == false && playbackEnded)
+                    )
                     Log.i(DEBUG_LOG, "Updating currentPosition into DAO: $updatedPodcastEntity")
                     podcastViewModel.podcastRepository.podcastDao.updatePodcast(updatedPodcastEntity)
                 }
