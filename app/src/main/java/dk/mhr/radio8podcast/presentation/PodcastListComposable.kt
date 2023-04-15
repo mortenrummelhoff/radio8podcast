@@ -6,10 +6,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
-
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -17,14 +15,11 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
-import androidx.test.core.app.ApplicationProvider
 import androidx.wear.compose.material.*
-
 import coil.compose.rememberAsyncImagePainter
 import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.theme.Radio8podcastTheme
@@ -42,6 +37,10 @@ import java.util.*
         } catch (e: Exception) {
             return e.toString()
         }
+    }
+
+    fun showMessage(context: Context, message:String) {
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 
     @OptIn(ExperimentalFoundationApi::class)
@@ -94,6 +93,7 @@ import java.util.*
 
 
                     ) {
+//                    val context = LocalContext.current
                     itemsIndexed(podcastViewModel.podcastByIdList) { index, podcast ->
 //                    (0 until jsonArray.length()).forEach {
 //                        val record = jsonArray.getJSONObject(it)
@@ -142,7 +142,7 @@ import java.util.*
                                 enabled = !alreadyDownloaded,
                                 onClick = {
                                     if (alreadyDownloaded) {
-                                        Toast.makeText(context, "Already downloaded", Toast.LENGTH_SHORT).show()
+                                        showMessage(context, "Already downloaded")
                                     } else {
 
                                         onPodCastDownload(

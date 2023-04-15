@@ -13,6 +13,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
@@ -25,7 +26,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
-class PlayerForegroundWorker(context: Context, workerParameters: WorkerParameters):
+@UnstableApi class PlayerForegroundWorker(context: Context, workerParameters: WorkerParameters):
     CoroutineWorker(context, workerParameters) {
 
     private val audioManagerManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -93,6 +94,7 @@ class PlayerForegroundWorker(context: Context, workerParameters: WorkerParameter
                     )
                     delay(5000)
                 }
+                podcastViewModel.updateCurrentPosition()
             }
         }
         Log.i(DEBUG_LOG, "Finish work for active player allowing to go to sleep")

@@ -208,7 +208,7 @@ class PodcastViewModel(private val podcastService: PodcastService) : ViewModel()
 //    }
 
 
-    private fun updateCurrentPosition() {
+    fun updateCurrentPosition() {
         val currentPosition: Long? = controller?.currentPosition
         val currentMediaItem = controller?.currentMediaItem ?: return
         podcastViewModel.viewModelScope.launch {
