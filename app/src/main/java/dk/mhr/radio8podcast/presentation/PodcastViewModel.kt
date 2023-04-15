@@ -236,7 +236,7 @@ import org.json.JSONObject
                 val podcastEntity = podcastViewModel.podcastRepository.podcastDao.findByUrl(currentMediaItem.mediaId)
                 if (podcastEntity != null) {
                     val updatedPodcastEntity = podcastEntity.copy(startPosition = currentPosition,
-                        hasBeenPlayed = (podcastEntity.hasBeenPlayed == false && playbackEnded)
+                        hasBeenPlayed = (podcastEntity.hasBeenPlayed == true || playbackEnded)
                     )
                     Log.i(DEBUG_LOG, "Updating currentPosition into DAO: $updatedPodcastEntity")
                     podcastViewModel.podcastRepository.podcastDao.updatePodcast(updatedPodcastEntity)
