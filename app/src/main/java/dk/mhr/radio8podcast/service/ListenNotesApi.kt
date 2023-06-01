@@ -1,11 +1,7 @@
 package dk.mhr.radio8podcast.service
 
-import android.util.Log
 import com.listennotes.podcast_api.exception.ListenApiException
-import dk.mhr.radio8podcast.presentation.DEBUG_LOG
-import dk.mhr.radio8podcast.presentation.podcastViewModel
 import org.json.JSONObject
-import kotlin.collections.HashMap
 
 class ListenNotesApi(API_KEY: String) {
 
@@ -32,6 +28,8 @@ class ListenNotesApi(API_KEY: String) {
         }
 
         try {
+            //val objClient = Client(apiKey)
+            //val objClient = Client()
             val objClient = ModClient(apiKey)
             val parameters = HashMap<String, String>()
 

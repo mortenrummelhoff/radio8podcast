@@ -21,7 +21,10 @@ class PodcastService(private val ioDispatcher: CoroutineDispatcher) {
 
     suspend fun fetchPodcastById(API_KEY: String, podcastId: String, nextEpisodePubDate: String): String {
         return withContext(ioDispatcher) {
-            ListenNotesApi(API_KEY).fetchPodcastById(nextEpisodePubDate = nextEpisodePubDate)!!.toString(2)
+            val fetchPodcastById =
+                ListenNotesApi(API_KEY).fetchPodcastById(nextEpisodePubDate = nextEpisodePubDate);
+            fetchPodcastById?.toString(2) ?: ""
+
         }
     }
 
