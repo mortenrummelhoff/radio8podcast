@@ -93,10 +93,7 @@ import java.util.*
 
 
                     ) {
-//                    val context = LocalContext.current
                     itemsIndexed(podcastViewModel.podcastByIdList) { index, podcast ->
-//                    (0 until jsonArray.length()).forEach {
-//                        val record = jsonArray.getJSONObject(it)
 
                         val alreadyDownloaded = (podcastViewModel.downloadList.filter {
                                 dataDownload ->
@@ -108,9 +105,6 @@ import java.util.*
 
                         Spacer(Modifier.size(padding))
                         Row(
-//                            Modifier.animateItemPlacement(
-//                                tween(durationMillis = 250, delayMillis = 100)
-//                            )
                         ) {
 
                             TitleCard(
@@ -131,20 +125,15 @@ import java.util.*
                                         } else {Brush.linearGradient(colors = listOf(
                                                 MaterialTheme.colors.background.copy(alpha = 0.6f),
                                                 MaterialTheme.colors.background.copy(alpha = 0.5f),
-                                                //MaterialTheme.colors.background.copy(alpha = 0.5f),
                                             ))
                                         }
                                     )
-
-//                                CardDefaults.imageBackgroundPainter(
                                 ,
-
                                 enabled = !alreadyDownloaded,
                                 onClick = {
                                     if (alreadyDownloaded) {
                                         showMessage(context, "Already downloaded")
                                     } else {
-
                                         onPodCastDownload(
                                             "${podcast.get("title")}",
                                             "${podcast.get("link")}",

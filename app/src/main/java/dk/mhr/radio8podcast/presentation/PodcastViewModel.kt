@@ -35,26 +35,13 @@ import org.json.JSONObject
 
 @UnstableApi class PodcastViewModel(private val podcastService: PodcastService) : ViewModel() {
 
-    init {
-        Log.i("MHR", "PodcastViewModel initialized")
-
-    }
-
     lateinit var bluetoothStateMonitor: BluetoothStateMonitor
     lateinit var controllerFuture: ListenableFuture<MediaController>
     val controller: MediaController? get() = if (controllerFuture.isDone) controllerFuture.get() else null
 
-
-//    lateinit var exoPlayer: ExoPlayer
-    //var player: MediaController? = null
     lateinit var audioManager: AudioManager
     var focusRequest: AudioFocusRequest? = null
     var LIFECYCLEOWNER: LifecycleOwner? = null
-    //var session: MediaSession? = null
-
-    //var player: Player? = null
-
-    //lateinit var podcastDao:PodcastDao
     lateinit var podcastRepository: PodcastRepository
 
     val downloadList = mutableStateListOf<DataDownload>()
@@ -63,7 +50,6 @@ import org.json.JSONObject
     val podcastByIdList = mutableStateListOf<JSONObject>()
 
     var loadingState = false
-
     val playerIsPlaying = mutableStateOf(false)
 
     fun formatLength(totalSecs: Long): String {
@@ -102,10 +88,6 @@ import org.json.JSONObject
 
             val podcastJSONObject =
                 podcastService.fetchPodcastById(API_KEY, "", next_episode_pub_date)
-            //podcastsById.value = podcastJSONObject
-
-
-            //val podcastByIdList: MutableList<JSONObject> = ArrayList()
             val jsonObject = JSONObject(podcastJSONObject)
             next_episode_pub_date = jsonObject.get("next_episode_pub_date").toString()
 
@@ -128,9 +110,6 @@ import org.json.JSONObject
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             Log.i(DEBUG_LOG, "onPlaybackStateChanged: $playbackState")
-//            if (STATE_ENDED == playbackState) {
-//                podcastViewModel.updateCurrentPosition()
-//            }
             super.onPlaybackStateChanged(playbackState)
         }
 

@@ -50,18 +50,6 @@ import dk.mhr.radio8podcast.presentation.DEBUG_LOG
     }
 
     @UnstableApi private class PodcastMediaCallback(val context: Context) : MediaSession.Callback {
-
-
-
-//        override fun onSetRating(
-//            session: MediaSession,
-//            controller: MediaSession.ControllerInfo,
-//            rating: Rating
-//        ): ListenableFuture<SessionResult> {
-//
-//            return super.onSetRating(session, controller, rating)
-//        }
-
         override fun onPlayerCommandRequest(
             session: MediaSession,
             controller: MediaSession.ControllerInfo,
@@ -94,7 +82,6 @@ import dk.mhr.radio8podcast.presentation.DEBUG_LOG
 
             val onConnect = super.onConnect(session, controller)
             val onConnectUpdated = onConnect.availablePlayerCommands.buildUpon().addAllCommands().build()
-            //val sessionCommands = onConnect.availableSessionCommands.buildUpon().add()
             Log.i(DEBUG_LOG, "Commands: " + onConnect.availableSessionCommands.commands)
 
             return MediaSession.ConnectionResult.accept(onConnect.availableSessionCommands, onConnectUpdated)
@@ -126,9 +113,7 @@ import dk.mhr.radio8podcast.presentation.DEBUG_LOG
                 updatedMediaItems.add(download.request.toMediaItem())
             }
 
-            //val updatedMediaItems = mediaItems.map { it.buildUpon().setUri(it.mediaId).build() }.toMutableList()
             return Futures.immediateFuture(updatedMediaItems)
-            //return super.onAddMediaItems(mediaSession, controller, mediaItems)
         }
 
     }

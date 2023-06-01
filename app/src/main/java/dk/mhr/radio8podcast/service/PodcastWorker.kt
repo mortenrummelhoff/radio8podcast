@@ -57,7 +57,6 @@ class PodcastWorker(appContext: Context, workerParams: WorkerParameters) :
                 } else {
                     Log.i( DEBUG_LOG,"Podcast exist in db for mediaId: ${mediaItem.mediaId} With startPosition: ${podcastEntity.startPosition}")
                     startP = podcastEntity.startPosition!!
-                    //startP = 0;
                 }
             }.apply {
                 withContext(Dispatchers.Main) {
@@ -83,7 +82,6 @@ class PodcastWorker(appContext: Context, workerParams: WorkerParameters) :
                                 podcastViewModel.controller?.setMediaItem(it, startP)
                                 podcastViewModel.controller?.prepare()
                             }
-
                         }
                     }
 
@@ -96,5 +94,4 @@ class PodcastWorker(appContext: Context, workerParams: WorkerParameters) :
             }
         }
     }
-
 }

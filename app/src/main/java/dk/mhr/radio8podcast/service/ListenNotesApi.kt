@@ -19,8 +19,6 @@ class ListenNotesApi(API_KEY: String) {
             val objClient = ModClient(apiKey)
             val parameters = HashMap<String, String>()
             parameters.put("id", "b6a00d39051a4a53a9b6cd66bb40e069")
-//            parameters.put("next_episode_pub_date", "1479154463000")
-//            parameters.put("sort", "recent_first")
             val response = objClient.fetchPodcastById(parameters)
             println(response.toJSON().toString(2))
         } catch (e: ListenApiException) {
@@ -35,8 +33,6 @@ class ListenNotesApi(API_KEY: String) {
 
         try {
             val objClient = ModClient(apiKey)
-            //objClient.getConnection()
-
             val parameters = HashMap<String, String>()
 
             parameters.put("id", podcastId)
@@ -46,11 +42,10 @@ class ListenNotesApi(API_KEY: String) {
             parameters.put("next_episode_pub_date", nextEpisodePubDate)
 
             val response = objClient.fetchPodcastById(parameters)
-            //println("Response here below:")
-            //println(response)
             println(response.toJSON().toString(2))
             return response.toJSON()
         } catch (e: ListenApiException) {
+            //TODO: Handle exception better. Inform User about error
             e.printStackTrace()
         }
         return null
@@ -63,7 +58,6 @@ class ListenNotesApi(API_KEY: String) {
 
         try {
             val objClient = ModClient(apiKey)
-            //objClient.getConnection()
 
             val parameters = HashMap<String, String>()
 
@@ -77,8 +71,6 @@ class ListenNotesApi(API_KEY: String) {
             parameters.put("safe_mode", "0")
 
             val response = objClient.search(parameters)
-            //println("Response here below:")
-            //println(response)
             println(response.toJSON().toString(2))
             return response.toJSON()
         } catch (e: ListenApiException) {

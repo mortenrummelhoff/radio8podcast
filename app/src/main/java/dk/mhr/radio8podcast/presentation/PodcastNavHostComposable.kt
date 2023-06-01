@@ -30,11 +30,8 @@ import dk.mhr.radio8podcast.service.PodcastUtils
     ) {
 
         val navController = rememberSwipeDismissableNavController()
-        val API_KEY = stringResource(R.string.api_key)
-
 
         SwipeDismissableNavHost(
-            //modifier = modifier,
             navController = navController,
             startDestination = startDestination
         ) {
@@ -54,7 +51,6 @@ import dk.mhr.radio8podcast.service.PodcastUtils
 
             }
             composable(Screen.ShowPodcast.route) {
-                //Log.i(DEBUG_LOG, "backStackEntry: ${it.destination}")
                 PodcastListComposable(context).ShowPodcastList(onPodCastDownload = { title, link, audio ->
                     Log.i(DEBUG_LOG, "Download Podcast clicked!: $title, Link: $link, audio: $audio")
 

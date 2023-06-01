@@ -15,7 +15,6 @@ class PodcastService(private val ioDispatcher: CoroutineDispatcher) {
     suspend fun searchPodcasts(API_KEY: String): String {
         return withContext(ioDispatcher) {
             var listenNotesService = ListenNotesApi(API_KEY)
-            //listenNotesService.main()
             listenNotesService.search()?.toString(2) ?: ""
         }
     }
@@ -26,12 +25,9 @@ class PodcastService(private val ioDispatcher: CoroutineDispatcher) {
         }
     }
 
-
     suspend fun fetchDownloadPodcastList(podcastDao: PodcastDao, downloadIndex: DownloadIndex): ArrayList<PodcastViewModel.DataDownload> {
         return withContext(ioDispatcher) {
             val downloadList = ArrayList<PodcastViewModel.DataDownload>()
-            //downloadList.clear()
-            //val terminalDownloads: MutableList<Download> = ArrayList()
             try {
                 downloadIndex.getDownloads()
                     .use { cursor ->
@@ -42,8 +38,6 @@ class PodcastService(private val ioDispatcher: CoroutineDispatcher) {
                                 DEBUG_LOG,
                                 "index" + index + ", Download: " + cursor.download.bytesDownloaded
                             );
-                            //terminalDownloads.add(cursor.download)
-                            //val dataDownload = DataDownload(cursor.download)
                             var startP: Long = 0
                             podcastDao.findByUrl(cursor.download.request.id).let {
                                 if (it != null) {
@@ -71,7 +65,6 @@ class PodcastService(private val ioDispatcher: CoroutineDispatcher) {
     suspend fun fetchDetails(API_KEY: String, podcastId: String): String {
         withContext(ioDispatcher) {
             var listenNotesService = ListenNotesApi(API_KEY)
-            //listenNotesService.main()
             listenNotesService.getDetailedInfo()
         }
         return ""

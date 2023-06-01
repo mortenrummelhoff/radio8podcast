@@ -60,9 +60,6 @@ import kotlinx.coroutines.withContext
             .setContentIntent(PendingIntent.getActivity(applicationContext, 0,
                 Intent.makeMainActivity(ComponentName(applicationContext, MainActivity::class.java)),
                 PendingIntent.FLAG_IMMUTABLE))
-            // Add the cancel action to the notification which can
-            // be used to cancel the worker
-        //    .addAction(android.R.drawable.ic_delete, cancel, intent)
             .build()
         return notification
 
@@ -71,8 +68,6 @@ import kotlinx.coroutines.withContext
 
     override suspend fun doWork(): Result {
         Log.i(DEBUG_LOG, "Start work for active player keeping it from sleep")
-
-
 
         val isPlaying = MutableLiveData(true)
         val mediaItem = MutableLiveData<MediaItem>()
@@ -96,7 +91,6 @@ import kotlinx.coroutines.withContext
                     )
                     delay(5000)
                 }
-
             }
         }
         Log.i(DEBUG_LOG, "Finish work for active player allowing to go to sleep")
@@ -107,7 +101,4 @@ import kotlinx.coroutines.withContext
         Log.i(DEBUG_LOG, "createForegroundInfo called: $currentPosition, mediaId: $mediaId")
         return ForegroundInfo(nextNotificationId, createNotification(currentPosition!!, mediaId))
     }
-
-
-
 }

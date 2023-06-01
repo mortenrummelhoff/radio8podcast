@@ -1,6 +1,7 @@
 package dk.mhr.radio8podcast.presentation
 
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.media.AudioManager
 //import android.media.session.MediaSession
@@ -29,6 +30,7 @@ import org.json.JSONObject
 
 class PodcastPlayerComposable(val context: Context) {
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Composable
     fun showPlayer() {
 

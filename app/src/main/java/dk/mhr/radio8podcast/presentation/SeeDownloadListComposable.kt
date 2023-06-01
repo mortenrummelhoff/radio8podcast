@@ -1,5 +1,6 @@
 package dk.mhr.radio8podcast.presentation
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.ScrollState
@@ -49,6 +50,7 @@ class SeeDownloadListComposable(
 ) {
 
 
+    @SuppressLint("UnsafeOptInUsageError")
     fun formatState(state: Int): String {
         return when (state) {
             STATE_STOPPED -> "Start Downloading"
@@ -60,6 +62,7 @@ class SeeDownloadListComposable(
         }
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Composable
     fun SeeDownloadList(
         onPodCastListen: () -> Unit,
@@ -201,6 +204,7 @@ class SeeDownloadListComposable(
 
 
     //@Composable@Composable
+    @SuppressLint("UnsafeOptInUsageError")
     @Composable
     fun showConfirmDialog(
         selectedDownload: PodcastViewModel.DataDownload,
@@ -209,18 +213,6 @@ class SeeDownloadListComposable(
         onDismiss: () -> Unit
     ) {
         Box {
-//            //var showDialog by remember { mutableStateOf(false) }
-//            Column(
-//                modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
-//                verticalArrangement = Arrangement.Center,
-//                horizontalAlignment = Alignment.CenterHorizontally
-//            ) {
-//                Chip(
-//                    onClick = {onPodCastDelete(selectedDownload)},
-//                    label = { Text("Show dialog") },
-//                    colors = ChipDefaults.secondaryChipColors(),
-//                )
-//            }
             val scrollState = rememberScalingLazyListState()
             Dialog(
                 showDialog = showDialog,

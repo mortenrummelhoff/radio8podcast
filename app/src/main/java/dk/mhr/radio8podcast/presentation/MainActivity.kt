@@ -32,17 +32,12 @@ val DEBUG_LOG = "MHR";
 
 @UnstableApi class MainActivity : ComponentActivity(), LifecycleOwner {
 
-
     private val appDatabase by lazy { AppDatabase.getDatabase(this) }
-    //private lateinit var controllerFuture: ListenableFuture<MediaController>
-    val playerEventLister = PodcastViewModel.PlayerEventListerUpdated(this)
-    val focusChangeListener = PodcastViewModel.PodcastAudioFocusChange()
-    val bluetoothStateMonitor = BluetoothStateMonitor(this)
-//    val bluetoothManager = this.getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
-    //val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-    override fun onCreate(savedInstanceState: Bundle?) {
-        //val viewModel: PodcastViewModel by viewModels();
+    private val playerEventLister = PodcastViewModel.PlayerEventListerUpdated(this)
+    private val focusChangeListener = PodcastViewModel.PodcastAudioFocusChange()
+    private val bluetoothStateMonitor = BluetoothStateMonitor(this)
 
+    override fun onCreate(savedInstanceState: Bundle?) {
 
         podcastViewModel.bluetoothStateMonitor = bluetoothStateMonitor
         //installSplashScreen()
@@ -70,8 +65,6 @@ val DEBUG_LOG = "MHR";
             PodcastUtils.getDownloadTracker(LocalContext.current).addListener {
                 podcastViewModel.fetchDownloadList(downloadIndex)
             }
-
-            //setTheme(android.R.style.Theme_DeviceDefault)
             PodcastNavHostComposable().PodCastNavHost("WearApp", this, this)
         }
     }
@@ -84,26 +77,8 @@ val DEBUG_LOG = "MHR";
             MediaController.Builder(
                 this,
                 SessionToken(this, ComponentName(this, PodcastPlayerService::class.java))
-            )
-                .buildAsync()
+            ).buildAsync()
         podcastViewModel.controllerFuture.addListener({ setController() }, MoreExecutors.directExecutor())
-
-
-//        Log.i(DEBUG_LOG, "onStart called!!!!!!")
-//        val sessionToken = SessionToken(this, ComponentName(this, PodcastPlayerService::class.java))
-//        controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
-//        controllerFuture.addListener(
-//            {
-//                val mediaController = controllerFuture.get()
-//
-//                    podcastViewModel.player = mediaController
-//                    mediaController.removeListener(playerEventLister)
-//                    mediaController.addListener(playerEventLister)
-//                    //mediaController.setPlaybackSpeed(1.0f)
-//
-//            },
-//            MoreExecutors.directExecutor()
-//        )
     }
 
     private fun setController() {
@@ -141,8 +116,6 @@ val DEBUG_LOG = "MHR";
 
     override fun onDestroy() {
         Log.i(DEBUG_LOG, "onDestroy called. Releasing components")
-//        podcastViewModel.player?.release()
-//        podcastViewModel.session?.release()
         super.onDestroy()
     }
 

@@ -65,7 +65,6 @@ class PodcastLandingComposable(val context: Context) {
                         Text(text = "Downloads")
                     },
                     secondaryLabel = {
-                        //Log.i("MHR", "secondaryLabel->" + podcastViewModel.podcasts.value)
                         Text("Click to see")
                     }
                 )
@@ -101,12 +100,7 @@ class PodcastLandingComposable(val context: Context) {
                             )
                         }
                     )
-
-
                 }
-
-                //Greeting(greetingName = greetingName)
-                //FetchPodcasts(onNavigateToFetchPodcast, onNavigateToSeeDownloadList)
             }
 
         }
