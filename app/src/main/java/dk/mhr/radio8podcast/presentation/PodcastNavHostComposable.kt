@@ -1,21 +1,17 @@
 package dk.mhr.radio8podcast.presentation
 
+//import androidx.compose.ui.Modifier
+
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.Composable
-//import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.offline.DownloadRequest
 import androidx.media3.exoplayer.offline.DownloadService
+import androidx.navigation.NavHostController
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
-import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
-
-import dk.mhr.radio8podcast.R
 import dk.mhr.radio8podcast.presentation.navigation.Screen
 import dk.mhr.radio8podcast.service.PodcastDownloadService
 import dk.mhr.radio8podcast.service.PodcastUtils
@@ -24,12 +20,10 @@ import dk.mhr.radio8podcast.service.PodcastUtils
 
     @Composable
     fun PodCastNavHost(
-        startDestination: String = "WearApp",
-        lifecycleOwner: LifecycleOwner,
-        context: Context
+        context: Context,
+        navController: NavHostController,
+        startDestination: String = Screen.Landing.route,
     ) {
-
-        val navController = rememberSwipeDismissableNavController()
 
         SwipeDismissableNavHost(
             navController = navController,
@@ -67,14 +61,10 @@ import dk.mhr.radio8podcast.service.PodcastUtils
                         false
                     )
                     "I'm Done here"
-                }, lifecycleOwner)
+                })
             }
             composable(Screen.SeeDownloads.route) {
-                SeeDownloadListComposable(
-                    PodcastUtils.getDownloadTracker(LocalContext.current),
-                    PodcastUtils.getDownloadManager(LocalContext.current).downloadIndex,
-                    lifecycleOwner
-                ).SeeDownloadList(onPodCastListen = {
+                SeeDownloadListComposable().SeeDownloadList(onPodCastListen = {
                     navController.navigate(route = Screen.PodcastPlayer.route)
                     { popUpTo(Screen.SeeDownloads.route) }
                 }, onPodCastDelete = { download ->

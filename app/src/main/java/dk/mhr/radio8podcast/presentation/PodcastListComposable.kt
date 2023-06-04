@@ -46,11 +46,9 @@ import java.util.*
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun ShowPodcastList(
-        onPodCastDownload: (title: String, link: String, audio: String) -> String,
-        lifecycleOwner: LifecycleOwner
+        onPodCastDownload: (title: String, link: String, audio: String) -> String
     ) {
         val API_KEY = stringResource(R.string.api_key)
-
 
         val padding = 6.dp
         Radio8podcastTheme {

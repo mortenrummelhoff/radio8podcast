@@ -35,3 +35,15 @@ Liskov Substitution Principle (LSP)
 Interface Segregation Principle (the more the better avoiding violation of LSP)
 Dependency inversion Principle (depend on abstraction and not concrete classes)
 )
+
+
+Kotlin used in compose:
+
+Highorder-function and lambda's
+(trailing lambdas)
+Scope and receivers
+Delegated properties
+Destructuring data classes
+Singleton objects (static -> companion)
+typesafe builders and DLS
+Coroutines

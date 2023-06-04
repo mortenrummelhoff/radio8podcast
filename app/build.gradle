@@ -21,6 +21,7 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         resValue "string", "api_key", properties.getProperty("api_key", "")
     }
 
@@ -53,6 +54,7 @@ android {
 
 dependencies {
 
+    implementation 'androidx.navigation:navigation-compose:2.5.3'
     def work_version = "2.8.1"
     implementation("androidx.work:work-runtime-ktx:$work_version")
     implementation("androidx.work:work-rxjava2:$work_version")
@@ -62,6 +64,14 @@ dependencies {
     def nav_version = "2.5.3"
 
     implementation "com.listennotes:podcast-api:1.1.5"
+
+    androidTestImplementation("androidx.test:runner:$compose_version")
+    // Test rules and transitive dependencies:
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:$compose_version")
+    // Needed for createAndroidComposeRule, but not createComposeRule:
+    debugImplementation("androidx.compose.ui:ui-test-manifest:$compose_version")
+    androidTestImplementation "androidx.navigation:navigation-testing:2.5.3"
+
 
     implementation("androidx.room:room-runtime:$room_version")
     annotationProcessor("androidx.room:room-compiler:$room_version")
@@ -160,7 +170,7 @@ dependencies {
     // Utilities for testing media components (including ExoPlayer components)
     implementation("androidx.media3:media3-test-utils:$media3_version")
     // Utilities for testing media components (including ExoPlayer components) via Robolectric
-    implementation("androidx.media3:media3-test-utils-robolectric:$media3_version")
+    testImplementation("androidx.media3:media3-test-utils-robolectric:$media3_version")
 
     // Common functionality for media database components
     implementation("androidx.media3:media3-database:$media3_version")
@@ -172,9 +182,12 @@ dependencies {
     implementation("androidx.media3:media3-common:$media3_version")
 
     //implementation 'com.google.android.exoplayer:extension-cronet:2.18.5'
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
-    debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
-    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
+    //implementation "androidx.compose.ui:ui:$compose_version"
+    //androidTestImplementation("androidx.compose.ui:ui-test:$compose_version")
+    //androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
+    //debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
+    //debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
+
 
 
 }

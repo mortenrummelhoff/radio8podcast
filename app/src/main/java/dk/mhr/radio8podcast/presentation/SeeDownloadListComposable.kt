@@ -43,11 +43,7 @@ import kotlinx.coroutines.flow.asFlow
 import java.nio.charset.Charset
 import kotlin.math.roundToInt
 
-class SeeDownloadListComposable(
-    val downloadTracker: PodcastDownloadTracker,
-    val downloadIndex: DownloadIndex,
-    val lifecycleOwner: LifecycleOwner
-) {
+class SeeDownloadListComposable() {
 
 
     @SuppressLint("UnsafeOptInUsageError")
@@ -71,8 +67,6 @@ class SeeDownloadListComposable(
     ) {
         Log.i("MHR", "SeeDownloadList called!")
 
-
-
         LaunchedEffect(Unit) {
 
             while (true) {
@@ -92,14 +86,11 @@ class SeeDownloadListComposable(
                             val dIndex = podcastViewModel.downloadList.indexOf(it2)
                             if (dIndex > -1) {
                                 Log.i(DEBUG_LOG, "Found index in list: " + dIndex)
-                                //podcastViewModel.downloadList[dIndex] = PodcastViewModel.DataDownload(item, it2.startPosition)
                                 podcastViewModel.downloadList[dIndex] =
                                     podcastViewModel.downloadList[dIndex].copy(
                                         download = mutableStateOf(item),
                                         startPosition = it2.startPosition
                                     )
-                                //podcastViewModel.downloadList[dIndex].download = item
-                                //podcastViewModel.downloadList
                                 Log.i(
                                     DEBUG_LOG,
                                     "download in downloadList: " + dIndex + " updated. New pct: " +

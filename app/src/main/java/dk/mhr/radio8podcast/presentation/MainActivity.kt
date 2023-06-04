@@ -14,10 +14,12 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.work.*
 import com.google.common.util.concurrent.MoreExecutors
 import dk.mhr.radio8podcast.data.AppDatabase
 import dk.mhr.radio8podcast.data.PodcastRepository
+import dk.mhr.radio8podcast.presentation.navigation.Screen
 import dk.mhr.radio8podcast.service.*
 import kotlinx.coroutines.Dispatchers
 
@@ -62,7 +64,9 @@ val DEBUG_LOG = "MHR";
             PodcastUtils.getDownloadTracker(LocalContext.current).addListener {
                 podcastViewModel.fetchDownloadList(downloadIndex)
             }
-            PodcastNavHostComposable().PodCastNavHost("WearApp", this, this)
+
+            val navController = rememberSwipeDismissableNavController()
+            PodcastNavHostComposable().PodCastNavHost(this, navController)
         }
     }
 
