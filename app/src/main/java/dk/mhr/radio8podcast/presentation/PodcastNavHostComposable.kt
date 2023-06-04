@@ -25,6 +25,7 @@ import dk.mhr.radio8podcast.service.PodcastUtils
         startDestination: String = Screen.Landing.route,
     ) {
 
+        Log.i(DEBUG_LOG, "Starting Navigation host")
         SwipeDismissableNavHost(
             navController = navController,
             startDestination = startDestination

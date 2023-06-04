@@ -1,13 +1,8 @@
 package dk.mhr.radio8podcast
 
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.printToLog
-import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import dk.mhr.radio8podcast.presentation.MainActivity
 import dk.mhr.radio8podcast.presentation.PodcastNavHostComposable
@@ -34,6 +29,14 @@ class Radio8PodcastTest {
 
     @Test
     fun testFetchPodcastsClickedTest() {
+        // Start the app
+        composeTestRule.setContent {
+            Radio8podcastTheme {
+                MainActivity()
+
+            }
+        }
+        composeTestRule.waitForIdle() // Advances the clock until Compose is idle
         composeTestRule.onRoot().printToLog("TAG")
     }
 }

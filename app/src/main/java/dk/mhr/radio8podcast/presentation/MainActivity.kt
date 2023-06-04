@@ -24,11 +24,11 @@ import dk.mhr.radio8podcast.service.*
 import kotlinx.coroutines.Dispatchers
 
 var podcastService = PodcastService(Dispatchers.IO)
+//TODO: use compose viewModel initializer class  https://developer.android.com/jetpack/compose/libraries
 var podcastViewModel = PodcastViewModel(podcastService);
 val DEBUG_LOG = "MHR";
 
 @UnstableApi class MainActivity : ComponentActivity(), LifecycleOwner {
-
 
     private val appDatabase by lazy { AppDatabase.getDatabase(this) }
     private val playerEventLister = PodcastViewModel.PlayerEventListener(this)
