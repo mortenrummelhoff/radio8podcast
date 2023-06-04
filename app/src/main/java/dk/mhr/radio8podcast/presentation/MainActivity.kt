@@ -1,9 +1,6 @@
 package dk.mhr.radio8podcast.presentation
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothManager
 import android.content.ComponentName
-import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
@@ -12,14 +9,12 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LifecycleOwner
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import androidx.work.*
-import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import dk.mhr.radio8podcast.data.AppDatabase
 import dk.mhr.radio8podcast.data.PodcastRepository
@@ -32,14 +27,16 @@ val DEBUG_LOG = "MHR";
 
 @UnstableApi class MainActivity : ComponentActivity(), LifecycleOwner {
 
+
     private val appDatabase by lazy { AppDatabase.getDatabase(this) }
-    private val playerEventLister = PodcastViewModel.PlayerEventListerUpdated(this)
+    private val playerEventLister = PodcastViewModel.PlayerEventListener(this)
     private val focusChangeListener = PodcastViewModel.PodcastAudioFocusChange()
     private val bluetoothStateMonitor = BluetoothStateMonitor(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         podcastViewModel.bluetoothStateMonitor = bluetoothStateMonitor
+        //TODO: show splashscreen upon creating
         //installSplashScreen()
         super.onCreate(savedInstanceState)
         //val bluetoothManager = this.getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
@@ -73,6 +70,7 @@ val DEBUG_LOG = "MHR";
         super.onStart()
         bluetoothStateMonitor.start()
 
+        //Initiate Android common MediaController to connect exoplayer and interact
         podcastViewModel.controllerFuture =
             MediaController.Builder(
                 this,

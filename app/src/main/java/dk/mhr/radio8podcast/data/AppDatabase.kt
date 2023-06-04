@@ -15,6 +15,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     }
 
+    //SINGLETON pattern
     companion object {
 
         @Volatile

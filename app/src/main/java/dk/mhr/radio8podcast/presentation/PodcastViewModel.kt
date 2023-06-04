@@ -67,6 +67,7 @@ import org.json.JSONObject
     fun fetchDownloadList(downloadIndex: DownloadIndex) {
         Log.i(DEBUG_LOG, "fetchingDownloadList" + downloadIndex.getDownloads().count);
         viewModelScope.launch {
+            //TODO: Not necessary to clear list every time. Instead check was has changed. But on the other hand this is easy :)
             downloadList.clear()
             downloadList.addAll(
                 podcastService.fetchDownloadPodcastList(
@@ -100,7 +101,7 @@ import org.json.JSONObject
         }
     }
 
-    class PlayerEventListerUpdated(val context: Context) : Player.Listener {
+    class PlayerEventListener(val context: Context) : Player.Listener {
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             Log.i(DEBUG_LOG, "onIsPlayingChanged: $isPlaying")
@@ -188,7 +189,7 @@ import org.json.JSONObject
                                     }
                                 }
                                 Log.i(DEBUG_LOG, "Player started. Create and start PlayerWorkRequest!")
-                                //Not really necessary anymore as the controller now handles foreground services
+                                //TODO: Not really necessary anymore as the common media controller now handles foreground services.
                                 WorkManager.getInstance(context).cancelAllWork()
                                 val playerWorkRequest: WorkRequest =
                                     OneTimeWorkRequestBuilder<PlayerForegroundWorker>().setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)

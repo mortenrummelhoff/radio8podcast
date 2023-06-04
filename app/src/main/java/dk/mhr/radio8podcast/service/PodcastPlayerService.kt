@@ -49,6 +49,7 @@ import dk.mhr.radio8podcast.presentation.DEBUG_LOG
 
     }
 
+    //Callback from Android media controller in order to handle incoming events from media controller
     @UnstableApi private class PodcastMediaCallback(val context: Context) : MediaSession.Callback {
         override fun onPlayerCommandRequest(
             session: MediaSession,

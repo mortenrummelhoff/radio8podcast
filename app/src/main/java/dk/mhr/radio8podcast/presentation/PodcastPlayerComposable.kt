@@ -48,9 +48,8 @@ class PodcastPlayerComposable(val context: Context) {
             else -> painterResource(R.drawable.icons_play) to painterResource(R.drawable.icons_play)
         }
 
-
-
         LaunchedEffect(Unit) {
+            //TODO: this cannot be good :)
             while (true) {
                 contentPositionString =
                     podcastViewModel.formatLength(totalSecs = podcastViewModel.controller?.contentPosition!!)
@@ -88,7 +87,7 @@ class PodcastPlayerComposable(val context: Context) {
 
                             var playbackDelayed = false
                             var playbackNowAuthorized = false
-
+                            //TODO: refactor this. Should not be handled inside composable ui
                             val res =
                                 podcastViewModel.audioManager.requestAudioFocus(podcastViewModel.focusRequest!!)
                             synchronized(focusLock) {
@@ -161,8 +160,6 @@ class PodcastPlayerComposable(val context: Context) {
                 } else {
                     Text("$contentPositionString --$durationString")
                 }
-                //Text(text = "Time: ")
-
                 Spacer(Modifier.size(2.dp))
                 Row {
                     Button(onClick = {
@@ -179,7 +176,6 @@ class PodcastPlayerComposable(val context: Context) {
                         Text("+15s")
                     }
                 }
-                //Spacer(Modifier.size(padding))
                 Row {
                     Button(onClick = {
                         Log.i(DEBUG_LOG, "DecreaseVol called")

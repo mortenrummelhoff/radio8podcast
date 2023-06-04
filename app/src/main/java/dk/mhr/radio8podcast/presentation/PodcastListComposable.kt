@@ -46,7 +46,7 @@ import java.util.*
     @OptIn(ExperimentalFoundationApi::class)
     @Composable
     fun ShowPodcastList(
-        onPodCastDownload: (title: String, link: String, audio: String) -> Unit,
+        onPodCastDownload: (title: String, link: String, audio: String) -> String,
         lifecycleOwner: LifecycleOwner
     ) {
         val API_KEY = stringResource(R.string.api_key)
@@ -134,11 +134,12 @@ import java.util.*
                                     if (alreadyDownloaded) {
                                         showMessage(context, "Already downloaded")
                                     } else {
-                                        onPodCastDownload(
+                                        val result = onPodCastDownload(
                                             "${podcast.get("title")}",
                                             "${podcast.get("link")}",
                                             "${podcast.get("audio")}"
                                         )
+                                        showMessage(context, "Starting download");
                                     }
                                 },
                                 title = {

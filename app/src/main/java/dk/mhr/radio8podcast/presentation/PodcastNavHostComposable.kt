@@ -41,6 +41,7 @@ import dk.mhr.radio8podcast.service.PodcastUtils
                     navController.navigate(Screen.ShowPodcast.route) { popUpTo(Screen.Landing.route) }
                 },
                     onNavigateToSeeDownloadList = {
+                        //TODO: instead of calling fetchDownloadList from here, it should be put into the SeeDownloads composable.
                         podcastViewModel.fetchDownloadList(PodcastUtils.getDownloadManager(context).downloadIndex)
                         navController.navigate(Screen.SeeDownloads.route)
                     },
@@ -53,7 +54,7 @@ import dk.mhr.radio8podcast.service.PodcastUtils
             composable(Screen.ShowPodcast.route) {
                 PodcastListComposable(context).ShowPodcastList(onPodCastDownload = { title, link, audio ->
                     Log.i(DEBUG_LOG, "Download Podcast clicked!: $title, Link: $link, audio: $audio")
-
+                    //TODO: This should be moved to service layer as it is not part of any navigation changes!!
                     val downloadRequest: DownloadRequest =
                         DownloadRequest.Builder(title, Uri.parse(audio)).setData(
                             title.encodeToByteArray()
@@ -65,7 +66,7 @@ import dk.mhr.radio8podcast.service.PodcastUtils
                         downloadRequest,
                         false
                     )
-
+                    "I'm Done here"
                 }, lifecycleOwner)
             }
             composable(Screen.SeeDownloads.route) {
