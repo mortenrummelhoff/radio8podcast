@@ -110,11 +110,6 @@ val DEBUG_LOG = "MHR";
         super.onPause()
     }
 
-    override fun onStop() {
-        super.onStop()
-        MediaController.releaseFuture(podcastViewModel.controllerFuture)
-        bluetoothStateMonitor.stop()
-    }
 
     override fun onDestroy() {
         Log.i(DEBUG_LOG, "onDestroy called. Releasing components")
